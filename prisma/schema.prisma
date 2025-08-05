@@ -1,0 +1,123 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum RoleName {
+  ADMIN
+  SUPERVISOR
+  TECHNICIAN
+}
+
+model Role {
+  id        Int      @id @default(autoincrement())
+  name      RoleName @unique
+  users     User[]
+}
+
+model User {
+  id        Int     @id @default(autoincrement())
+  email     String  @unique
+  name      String
+  password  String
+  roleId    Int
+  role      Role    @relation(fields: [roleId], references: [id])
+  jobs      Job[]   @relation("TechnicianJobs")
+  reports   TechnicianReport[]
+  createdAt DateTime @default(now())
+  emailVerified DateTime?
+  sessions  Session[]
+  accounts  Account[]
+  jobStatusHistories JobStatusHistory[]
+  profilePicture String?
+  nationality String?
+  dateOfBirth DateTime?
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       Int
+  user         User     @relation(fields: [userId], references: [id])
+  expires      DateTime
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             Int
+  user               User    @relation(fields: [userId], references: [id])
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?  
+  access_token       String?  
+  expires_at         Int?     
+  token_type         String?  
+  scope              String?  
+  id_token           String?  
+  session_state      String?  
+  oauth_token_secret String?  
+  oauth_token        String?  
+  @@unique([provider, providerAccountId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires   DateTime
+  @@id([identifier, token])
+}
+
+model JobType {
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
+  jobs        Job[]
+}
+
+model Job {
+  id            Int     @id @default(autoincrement())
+  jobTypeId     Int
+  jobType       JobType @relation(fields: [jobTypeId], references: [id])
+  status        String
+  startTime     DateTime
+  endTime       DateTime?
+  location      String
+  technicianId  Int?
+  technician    User?   @relation("TechnicianJobs", fields: [technicianId], references: [id])
+  reports       TechnicianReport[]
+  statusHistory JobStatusHistory[]
+}
+
+model TechnicianReport {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  jobId       Int
+  job         Job      @relation(fields: [jobId], references: [id])
+  notes       String
+  images      String // Store JSON stringified array
+  submissionDate DateTime @default(now())
+  signature   String?
+}
+
+model JobStatusHistory {
+  id             Int      @id @default(autoincrement())
+  jobId          Int
+  job            Job      @relation(fields: [jobId], references: [id])
+  previousStatus String
+  currentStatus  String
+  timestamp      DateTime @default(now())
+  userId         Int
+  user           User     @relation(fields: [userId], references: [id])
+}
