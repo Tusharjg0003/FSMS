@@ -46,5 +46,5 @@ next-env.d.ts
 package-lock.json
 
 # Ignore Prisma local database
-prisma/dev.db
+# prisma/dev.db
 
