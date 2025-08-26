@@ -39,7 +39,7 @@ export default function LocationTracker({
   showHistory = true, 
   autoTrack = true 
 }: LocationTrackerProps) {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [currentLocation, setCurrentLocation] = useState<Location | null>(null);
   const [locationHistory, setLocationHistory] = useState<LocationHistoryItem[]>([]);
   const [isTracking, setIsTracking] = useState(false);
@@ -48,6 +48,7 @@ export default function LocationTracker({
   const [loading, setLoading] = useState(false);
   const watchIdRef = useRef<number | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const isStartingRef = useRef<boolean>(false);
 
   // Fetch current location and history
   const fetchLocationData = async () => {
@@ -58,13 +59,32 @@ export default function LocationTracker({
       const response = await fetch(`/api/technician/location?${params}`);
       if (response.ok) {
         const data = await response.json();
-        setCurrentLocation(data.currentLocation);
+        const lat = data?.currentLocation?.latitude;
+        const lng = data?.currentLocation?.longitude;
+        if (typeof lat === 'number' && typeof lng === 'number') {
+          setCurrentLocation(data.currentLocation);
+        } else {
+          setCurrentLocation(null);
+        }
         setLocationHistory(data.locationHistory || []);
       }
     } catch (error) {
       console.error('Error fetching location data:', error);
     }
   };
+
+  // Stop location tracking
+  function stopTracking() {
+    if (watchIdRef.current) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    setIsTracking(false);
+  }
 
   // Update location to server
   const updateLocation = async (location: Location) => {
@@ -81,7 +101,11 @@ export default function LocationTracker({
 
       if (response.ok) {
         const data = await response.json();
-        setCurrentLocation(data.currentLocation);
+        const lat = data?.currentLocation?.latitude;
+        const lng = data?.currentLocation?.longitude;
+        if (typeof lat === 'number' && typeof lng === 'number') {
+          setCurrentLocation(data.currentLocation);
+        }
         setSuccess('Location updated successfully');
         onLocationUpdate?.(location);
         
@@ -90,6 +114,9 @@ export default function LocationTracker({
         
         // Clear success message after 3 seconds
         setTimeout(() => setSuccess(''), 3000);
+      } else if (response.status === 401) {
+        stopTracking();
+        setError('You are not authorized. Please sign in again.');
       } else {
         const errorData = await response.json();
         setError(errorData.error || 'Failed to update location');
@@ -114,18 +141,44 @@ export default function LocationTracker({
         reject,
         {
           enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 60000, // 1 minute
+          timeout: 20000,
+          maximumAge: 30000,
         }
       );
     });
   };
 
+  // Try to get position with fallback attempts on timeout
+  const tryGetPositionWithFallback = async (): Promise<GeolocationPosition> => {
+    try {
+      return await getCurrentPosition();
+    } catch (err: any) {
+      // If timeout, try once more with lower accuracy and longer timeout
+      if (err?.code === 3 /* TIMEOUT */) {
+        return new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(
+            resolve,
+            reject,
+            {
+              enableHighAccuracy: false,
+              timeout: 30000,
+              maximumAge: 0,
+            }
+          );
+        });
+      }
+      throw err;
+    }
+  };
+
   // Start location tracking
   const startTracking = async () => {
     try {
+      if (isStartingRef.current || isTracking) return;
+      if (status !== 'authenticated' || (session?.user as any)?.role !== 'TECHNICIAN') return;
+      isStartingRef.current = true;
       setError('');
-      const position = await getCurrentPosition();
+      const position = await tryGetPositionWithFallback();
       
       const location: Location = {
         latitude: position.coords.latitude,
@@ -160,7 +213,7 @@ export default function LocationTracker({
           },
           {
             enableHighAccuracy: true,
-            timeout: 10000,
+            timeout: 20000,
             maximumAge: 30000, // 30 seconds
           }
         );
@@ -168,7 +221,7 @@ export default function LocationTracker({
         // Also update every 5 minutes as backup
         intervalRef.current = setInterval(async () => {
           try {
-            const position = await getCurrentPosition();
+            const position = await tryGetPositionWithFallback();
             const location: Location = {
               latitude: position.coords.latitude,
               longitude: position.coords.longitude,
@@ -185,20 +238,9 @@ export default function LocationTracker({
     } catch (error) {
       console.error('Error starting location tracking:', error);
       setError('Failed to get location. Please check GPS permissions.');
+    } finally {
+      isStartingRef.current = false;
     }
-  };
-
-  // Stop location tracking
-  const stopTracking = () => {
-    if (watchIdRef.current) {
-      navigator.geolocation.clearWatch(watchIdRef.current);
-      watchIdRef.current = null;
-    }
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-    setIsTracking(false);
   };
 
   // Manual location update
@@ -235,10 +277,10 @@ export default function LocationTracker({
 
   // Auto-start tracking if enabled
   useEffect(() => {
-    if (autoTrack && (session?.user as any)?.role === 'TECHNICIAN') {
+    if (autoTrack && status === 'authenticated' && (session?.user as any)?.role === 'TECHNICIAN') {
       startTracking();
     }
-  }, [autoTrack, session]);
+  }, [autoTrack, session, status]);
 
   if ((session?.user as any)?.role !== 'TECHNICIAN') {
     return null;
@@ -263,22 +305,22 @@ export default function LocationTracker({
       {/* Current Location Display */}
       <div className="mb-6">
         <h4 className="text-md font-medium text-gray-900 mb-2">Current Location</h4>
-        {currentLocation ? (
+        {currentLocation && typeof currentLocation.latitude === 'number' && typeof currentLocation.longitude === 'number' ? (
           <div className="bg-gray-50 p-3 rounded">
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div className="text-gray-800"><span className="font-medium text-gray-900">Latitude:</span> {currentLocation.latitude.toFixed(6)}</div>
               <div className="text-gray-800"><span className="font-medium text-gray-900">Longitude:</span> {currentLocation.longitude.toFixed(6)}</div>
-              {currentLocation.accuracy && (
+              {typeof currentLocation.accuracy === 'number' && (
                 <div className="text-gray-800"><span className="font-medium text-gray-900">Accuracy:</span> {currentLocation.accuracy.toFixed(1)}m</div>
               )}
-              {currentLocation.speed && (
+              {typeof currentLocation.speed === 'number' && (
                 <div className="text-gray-800"><span className="font-medium text-gray-900">Speed:</span> {(currentLocation.speed * 3.6).toFixed(1)} km/h</div>
               )}
-              {currentLocation.heading && (
+              {typeof currentLocation.heading === 'number' && (
                 <div className="text-gray-800"><span className="font-medium text-gray-900">Heading:</span> {currentLocation.heading.toFixed(0)}°</div>
               )}
             </div>
-            {currentLocation.accuracy && (
+            {typeof currentLocation.accuracy === 'number' && (
               <div className="mt-2 text-xs text-gray-600">
                 GPS Accuracy: {currentLocation.accuracy < 10 ? 'Excellent' : 
                                currentLocation.accuracy < 20 ? 'Good' : 
@@ -328,7 +370,9 @@ export default function LocationTracker({
                 <div className="flex justify-between items-start">
                   <div className="text-sm">
                     <div className="font-medium text-gray-900">
-                      {item.latitude.toFixed(6)}, {item.longitude.toFixed(6)}
+                      {typeof item.latitude === 'number' && typeof item.longitude === 'number' 
+                        ? `${item.latitude.toFixed(6)}, ${item.longitude.toFixed(6)}` 
+                        : 'Unknown coordinates'}
                     </div>
                     <div className="text-gray-600 text-xs">
                       {new Date(item.timestamp).toLocaleString()}
@@ -340,8 +384,8 @@ export default function LocationTracker({
                     )}
                   </div>
                   <div className="text-xs text-gray-600 text-right">
-                    {item.accuracy && <div>±{item.accuracy.toFixed(1)}m</div>}
-                    {item.speed && <div>{(item.speed * 3.6).toFixed(1)} km/h</div>}
+                    {typeof item.accuracy === 'number' && <div>±{item.accuracy.toFixed(1)}m</div>}
+                    {typeof item.speed === 'number' && <div>{(item.speed * 3.6).toFixed(1)} km/h</div>}
                   </div>
                 </div>
               </div>
@@ -351,7 +395,7 @@ export default function LocationTracker({
       )}
 
       {/* Map Link */}
-      {currentLocation && (
+      {currentLocation && typeof currentLocation.latitude === 'number' && typeof currentLocation.longitude === 'number' && (
         <div className="mt-4 pt-4 border-t border-gray-200">
           <a
             href={`https://www.google.com/maps?q=${currentLocation.latitude},${currentLocation.longitude}`}
