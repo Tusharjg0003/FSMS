@@ -49,7 +49,7 @@ export default function DashboardPage() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center p-4">
         <div className="text-lg">Loading...</div>
       </div>
     );
@@ -84,7 +84,7 @@ export default function DashboardPage() {
     return (
       <div className="mb-8">
         {/* Filter Bar */}
-        <div className="flex space-x-2 mb-4">
+        <div className="flex flex-wrap gap-2 mb-4">
           {statusOptions.map((opt) => (
             <button
               key={opt.value}
@@ -105,7 +105,7 @@ export default function DashboardPage() {
         ) : !jobs.length ? (
           <div className="py-8 text-center text-gray-600">No jobs found.</div>
         ) : (
-          <div className="overflow-x-auto max-h-96 overflow-y-scroll bg-white shadow rounded-lg">
+          <div className="overflow-x-auto max-h-96 overflow-y-auto bg-white shadow rounded-lg">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50 sticky top-0 z-10">
                 <tr>
@@ -163,7 +163,7 @@ export default function DashboardPage() {
     if (!techOfMonth) return <div className="py-4 text-center text-gray-600">No technician of the month data available</div>;
 
     return (
-      <div className="mb-8 p-6 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg shadow">
+      <div className="mb-8 p-6 border border-yellow-200 rounded-lg shadow bg-[#FFF7CE]">
         <div className="flex items-center space-x-6">
           <div className="text-4xl text-yellow-600">T</div>
           {techOfMonth.profilePicture ? (
@@ -227,7 +227,7 @@ export default function DashboardPage() {
     return (
       <div className="mt-12">
         <h2 className="text-2xl font-bold text-gray-900 mb-6">Analytics Dashboard</h2>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
           <div className="bg-white p-6 rounded-lg shadow flex flex-col items-center">
             <div className="text-2xl font-bold text-blue-600">{data.totalJobs}</div>
             <div className="text-gray-800 mt-2">Total Jobs</div>
@@ -241,84 +241,120 @@ export default function DashboardPage() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-4 text-gray-900">Jobs by Status</h3>
-            <Pie
-              data={{
-                labels: statusLabels,
-                datasets: [
-                  {
-                    data: statusCounts,
-                    backgroundColor: ['#60a5fa', '#fbbf24', '#34d399', '#f87171'],
-                  },
-                ],
-              }}
-            />
+            <h3 className="text-lg font-semibold mb-4 text-gray-900 text-center">Jobs by Status</h3>
+            <div className="h-64 flex items-center justify-center py-3"> 
+              <div className='w-full h-full'>
+                <Pie
+                  data={{
+                    labels: statusLabels,
+                    datasets: [
+                      {
+                        data: statusCounts,
+                        backgroundColor: ['#60a5fa', '#fbbf24', '#34d399', '#f87171'],
+                      },
+                    ],
+                  }}
+                  options={{
+                    maintainAspectRatio: false, 
+                    responsive: true,
+                    plugins: {
+                      legend: {
+                        position:'bottom',
+                        labels: {
+                          font: {
+                            size: 12, 
+                          },
+                          padding: 15
+                        }
+                      }
+                    }
+                }}
+              />
+              </div>
+            </div>
           </div>
           <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-4 text-gray-900">Jobs per Technician</h3>
-            <Bar
-              data={{
-                labels: techLabels,
-                datasets: [
-                  {
-                    label: 'Jobs',
-                    data: techCounts,
-                    backgroundColor: '#60a5fa',
-                  },
-                ],
-              }}
-              options={{
-                plugins: { legend: { display: false } },
-                responsive: true,
-                scales: { x: { ticks: { autoSkip: false } } },
-              }}
-            />
+            <h3 className="text-lg font-semibold mb-4 text-gray-900 text-center">Jobs per Technician</h3>
+            <div className="h-64 flex items-center justify-center">
+              <div className='w-full h-full'>
+                <Bar
+                  data={{
+                    labels: techLabels,
+                    datasets: [
+                      {
+                        label: 'Jobs',
+                        data: techCounts,
+                        backgroundColor: '#60a5fa',
+                      },
+                    ],
+                  }}
+                  options={{
+                    plugins: { legend: { display: false } },
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { x: { ticks: { autoSkip: false } } },
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-semibold mb-4 text-gray-900 text-center">Jobs per Job Type</h3>
+            <div className="h-64 flex items-center justify-center">
+              <div className='w-full h-full'>
+                <Bar
+                  data={{
+                    labels: typeLabels,
+                    datasets: [
+                      {
+                        label: 'Jobs',
+                        data: typeCounts,
+                        backgroundColor: '#34d399',
+                      },
+                    ],
+                  }}
+                  options={{
+                    plugins: { legend: { display: false } },
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { x: { ticks: { autoSkip: false } } },
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-semibold mb-4 text-gray-900 text-center">Jobs Completed Per Month</h3>
+              <div className='h-64 flex items-center justify-center'>
+                <div className='w-full h-full'>
+                  <Line
+                    data={{
+                      labels: monthLabels,
+                      datasets: [
+                        {
+                          label: 'Completed Jobs',
+                          data: monthCounts,
+                          borderColor: '#6366f1',
+                          backgroundColor: '#a5b4fc',
+                          fill: true,
+                        },
+                      ],
+                    }}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: { legend: { display: false } },
+                    }}
+                  />
+                </div>
+              </div>
+              
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-4 text-gray-900">Jobs per Job Type</h3>
-            <Bar
-              data={{
-                labels: typeLabels,
-                datasets: [
-                  {
-                    label: 'Jobs',
-                    data: typeCounts,
-                    backgroundColor: '#34d399',
-                  },
-                ],
-              }}
-              options={{
-                plugins: { legend: { display: false } },
-                responsive: true,
-                scales: { x: { ticks: { autoSkip: false } } },
-              }}
-            />
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-4 text-gray-900">Jobs Completed Per Month</h3>
-            <Line
-              data={{
-                labels: monthLabels,
-                datasets: [
-                  {
-                    label: 'Completed Jobs',
-                    data: monthCounts,
-                    borderColor: '#6366f1',
-                    backgroundColor: '#a5b4fc',
-                    fill: true,
-                  },
-                ],
-              }}
-              options={{
-                responsive: true,
-                plugins: { legend: { display: false } },
-              }}
-            />
-          </div>
-        </div>
+        
+        
       </div>
+      
     );
   };
 
@@ -326,8 +362,8 @@ export default function DashboardPage() {
     switch ((session.user as any).role) {
       case 'ADMIN':
         return (
-          <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-100">
-            <div className="max-w-7xl mx-auto py-8">
+          <div className="min-h-screen ">
+            <div className=" mx-auto py-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome back, {session.user?.name}!</h2>
               <p className="text-gray-700 mb-6">You are logged in as a admin.</p>
               <div className="flex justify-between items-center mb-6">
@@ -378,8 +414,8 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <nav className="bg-white shadow sticky top-0 z-50">
+        <div className="mx-auto px-4 sm:px-10 lg:px-16">
           <div className="flex justify-between h-16">
             <div className="flex items-center space-x-8">
               <h1 className="text-xl font-semibold text-gray-900">FSM Dashboard</h1>
@@ -398,7 +434,7 @@ export default function DashboardPage() {
                 <Link href="/admin/technician-locations" className="text-gray-700 hover:text-blue-600 font-medium">Location Tracking</Link>
               )}
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-4 overflow-x-auto">
               <span className="text-sm text-gray-700">
                 Welcome, <span className="font-medium text-gray-900">{session.user?.name}</span> <span className="text-gray-500">({(session.user as any).role})</span>
               </span>
@@ -413,7 +449,7 @@ export default function DashboardPage() {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <main className=" mx-auto py-6 sm:px-10 lg:px-16">
         <div className="px-4 py-6 sm:px-0">
           {getRoleBasedContent()}
         </div>
