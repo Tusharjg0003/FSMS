@@ -171,6 +171,21 @@ export default function LocationTracker({
     }
   };
 
+  // Map geolocation errors to friendly messages
+  const getGeolocationErrorMessage = (error: any): string => {
+    const code = typeof error?.code === 'number' ? error.code : undefined;
+    switch (code) {
+      case 1: // PERMISSION_DENIED
+        return 'Location permission denied. Please enable location access for this site in your browser settings.';
+      case 2: // POSITION_UNAVAILABLE
+        return 'Location unavailable. Please ensure GPS/location services are enabled and try again.';
+      case 3: // TIMEOUT
+        return 'Timed out while trying to acquire your location. Move to an open area or try again.';
+      default:
+        return 'Failed to get location. Please check GPS permissions.';
+    }
+  };
+
   // Start location tracking
   const startTracking = async () => {
     try {
@@ -236,8 +251,8 @@ export default function LocationTracker({
         }, 5 * 60 * 1000); // 5 minutes
       }
     } catch (error) {
-      console.error('Error starting location tracking:', error);
-      setError('Failed to get location. Please check GPS permissions.');
+      console.warn('Error starting location tracking:', error);
+      setError(getGeolocationErrorMessage(error));
     } finally {
       isStartingRef.current = false;
     }
@@ -256,7 +271,7 @@ export default function LocationTracker({
       };
       await updateLocation(location);
     } catch (error) {
-      setError('Failed to get current location');
+      setError(getGeolocationErrorMessage(error));
     }
   };
 
@@ -277,9 +292,31 @@ export default function LocationTracker({
 
   // Auto-start tracking if enabled
   useEffect(() => {
-    if (autoTrack && status === 'authenticated' && (session?.user as any)?.role === 'TECHNICIAN') {
-      startTracking();
+    if (!(autoTrack && status === 'authenticated' && (session?.user as any)?.role === 'TECHNICIAN')) {
+      return;
     }
+
+    let isCancelled = false;
+
+    const maybeAutostart = async () => {
+      try {
+        if (typeof navigator !== 'undefined' && (navigator as any).permissions?.query) {
+          const result = await (navigator as any).permissions.query({ name: 'geolocation' as PermissionName });
+          if (!isCancelled && result.state === 'granted') {
+            startTracking();
+          }
+        }
+      } catch {
+        // Ignore permission query errors; will require user gesture
+      }
+    };
+
+    // Only auto-start if permission already granted; otherwise wait for user gesture
+    maybeAutostart();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [autoTrack, session, status]);
 
   if ((session?.user as any)?.role !== 'TECHNICIAN') {
