@@ -97,6 +97,9 @@ model Job {
   technician    User?   @relation("TechnicianJobs", fields: [technicianId], references: [id])
   reports       TechnicianReport[]
   statusHistory JobStatusHistory[]
+
+  @@index([technicianId, startTime])
+  @@index([startTime])
 }
 
 model TechnicianReport {
