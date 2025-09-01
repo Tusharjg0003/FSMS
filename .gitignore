@@ -41,3 +41,10 @@ yarn-error.log*
 next-env.d.ts
 
 /src/generated/prisma
+
+# Ignore package lock file
+package-lock.json
+
+# Ignore Prisma local database
+prisma/dev.db
+

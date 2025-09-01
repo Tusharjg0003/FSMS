@@ -3,6 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import LocationTracker from '../../../components/LocationTracker';
 
 export default function TechnicianProfilePage() {
   const { data: session, status, update } = useSession();
@@ -122,66 +123,81 @@ export default function TechnicianProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-xl mx-auto py-8">
+      <div className="max-w-4xl mx-auto py-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-6">My Profile</h1>
-        <div className="bg-white shadow rounded-lg p-6 mb-6">
-          <div className="mb-4 flex items-center gap-4">
-            {form.profilePicture ? (
-              <img src={form.profilePicture} alt="Profile" className="w-20 h-20 rounded-full object-cover border" />
-            ) : (
-              <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center text-2xl text-gray-400 border">👤</div>
-            )}
-            <div>
-              <div className="mb-2"><strong>Name:</strong> {profile?.name}</div>
-              <div className="mb-2"><strong>Email:</strong> {profile?.email}</div>
-              <label className="block mt-2">
-                <span className="text-sm text-gray-600">Change Profile Picture</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 mt-1"
-                />
-              </label>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Profile Information */}
+          <div className="space-y-6">
+            <div className="bg-white shadow rounded-lg p-6">
+              <div className="mb-4 flex items-center gap-4">
+                {form.profilePicture ? (
+                  <img src={form.profilePicture} alt="Profile" className="w-20 h-20 rounded-full object-cover border" />
+                ) : (
+                  <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center text-2xl text-gray-400 border">U</div>
+                )}
+                <div>
+                  <div className="mb-2"><strong className="text-gray-900">Name:</strong> <span className="text-gray-800">{profile?.name}</span></div>
+                  <div className="mb-2"><strong className="text-gray-900">Email:</strong> <span className="text-gray-800">{profile?.email}</span></div>
+                  <label className="block mt-2">
+                    <span className="text-sm text-gray-700">Change Profile Picture</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 mt-1"
+                    />
+                  </label>
+                </div>
+              </div>
             </div>
+            
+            <form onSubmit={handleProfileUpdate} className="bg-white shadow rounded-lg p-6 space-y-4">
+              <h2 className="text-lg font-semibold">Update Profile</h2>
+              {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">{error}</div>}
+              {success && <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">{success}</div>}
+              <input
+                type="text"
+                name="nationality"
+                value={form.nationality}
+                onChange={handleChange}
+                placeholder="Nationality"
+                className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              />
+              <input
+                type="date"
+                name="dateOfBirth"
+                value={form.dateOfBirth}
+                onChange={handleChange}
+                placeholder="Date of Birth"
+                className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              />
+              <input
+                type="password"
+                name="password"
+                value={form.password}
+                onChange={handleChange}
+                placeholder="New password (leave blank to keep unchanged)"
+                className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              />
+              <button
+                type="submit"
+                disabled={loading}
+                className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md text-sm font-medium disabled:opacity-50"
+              >
+                {loading ? 'Updating...' : 'Update Profile'}
+              </button>
+            </form>
+          </div>
+
+          {/* Location Tracking */}
+          <div>
+            <LocationTracker 
+              showHistory={true}
+              autoTrack={true}
+            />
           </div>
         </div>
-        <form onSubmit={handleProfileUpdate} className="bg-white shadow rounded-lg p-6 space-y-4">
-          <h2 className="text-lg font-semibold">Update Profile</h2>
-          {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">{error}</div>}
-          {success && <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">{success}</div>}
-          <input
-            type="text"
-            name="nationality"
-            value={form.nationality}
-            onChange={handleChange}
-            placeholder="Nationality"
-            className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-          />
-          <input
-            type="date"
-            name="dateOfBirth"
-            value={form.dateOfBirth}
-            onChange={handleChange}
-            placeholder="Date of Birth"
-            className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-          />
-          <input
-            type="password"
-            name="password"
-            value={form.password}
-            onChange={handleChange}
-            placeholder="New password (leave blank to keep unchanged)"
-            className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-          />
-          <button
-            type="submit"
-            disabled={loading}
-            className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md text-sm font-medium disabled:opacity-50"
-          >
-            {loading ? 'Updating...' : 'Update Profile'}
-          </button>
-        </form>
       </div>
     </div>
   );

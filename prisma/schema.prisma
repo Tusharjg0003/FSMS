@@ -42,6 +42,11 @@ model User {
   profilePicture String?
   nationality String?
   dateOfBirth DateTime?
+  // Location tracking fields
+  currentLatitude Float?
+  currentLongitude Float?
+  lastLocationUpdate DateTime?
+  locationHistory LocationHistory[]
 }
 
 model Session {
@@ -97,9 +102,11 @@ model Job {
   technician    User?   @relation("TechnicianJobs", fields: [technicianId], references: [id])
   reports       TechnicianReport[]
   statusHistory JobStatusHistory[]
-
   @@index([technicianId, startTime])
   @@index([startTime])
+  locationHistory LocationHistory[] // Add this relation
+}
+
 }
 
 model TechnicianReport {
@@ -123,4 +130,19 @@ model JobStatusHistory {
   timestamp      DateTime @default(now())
   userId         Int
   user           User     @relation(fields: [userId], references: [id])
+}
+
+// New model for tracking location history
+model LocationHistory {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  latitude  Float
+  longitude Float
+  timestamp DateTime @default(now())
+  accuracy  Float?   // GPS accuracy in meters
+  speed     Float?   // Speed in m/s
+  heading   Float?   // Direction in degrees
+  jobId     Int?     // Associated job if any
+  job       Job?     @relation(fields: [jobId], references: [id])
 }

@@ -101,20 +101,20 @@ export default function DashboardPage() {
         </div>
         {/* Jobs Table */}
         {loading ? (
-          <div className="py-8 text-center">Loading jobs...</div>
+          <div className="py-8 text-center text-gray-700">Loading jobs...</div>
         ) : !jobs.length ? (
-          <div className="py-8 text-center text-gray-500">No jobs found.</div>
+          <div className="py-8 text-center text-gray-600">No jobs found.</div>
         ) : (
           <div className="overflow-x-auto max-h-96 overflow-y-scroll bg-white shadow rounded-lg">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50 sticky top-0 z-10">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Job Type</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Technician</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Job Type</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Location</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Start</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">End</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Technician</th>
                   <th className="px-6 py-3"></th>
                 </tr>
               </thead>
@@ -159,13 +159,13 @@ export default function DashboardPage() {
         });
     }, []);
 
-    if (loading) return <div className="py-4 text-center">Loading technician of the month...</div>;
-    if (!techOfMonth) return <div className="py-4 text-center text-gray-500">No technician of the month data available</div>;
+    if (loading) return <div className="py-4 text-center text-gray-700">Loading technician of the month...</div>;
+    if (!techOfMonth) return <div className="py-4 text-center text-gray-600">No technician of the month data available</div>;
 
     return (
       <div className="mb-8 p-6 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg shadow">
         <div className="flex items-center space-x-6">
-          <div className="text-4xl">🏆</div>
+          <div className="text-4xl text-yellow-600">T</div>
           {techOfMonth.profilePicture ? (
             <img
               src={techOfMonth.profilePicture}
@@ -179,13 +179,13 @@ export default function DashboardPage() {
           )}
           <div>
             <div className="text-lg font-semibold text-yellow-900">Technician of the Month (Last 30 Days)</div>
-            <div className="text-xl font-bold text-yellow-700">{techOfMonth.name}</div>
-            <div className="text-gray-700">{techOfMonth.email}</div>
+            <div className="text-xl font-bold text-yellow-800">{techOfMonth.name}</div>
+            <div className="text-gray-800">{techOfMonth.email}</div>
             {techOfMonth.nationality && (
-              <div className="text-gray-600">Nationality: {techOfMonth.nationality}</div>
+              <div className="text-gray-700">Nationality: {techOfMonth.nationality}</div>
             )}
             {techOfMonth.dateOfBirth && (
-              <div className="text-gray-600">Date of Birth: {new Date(techOfMonth.dateOfBirth).toLocaleDateString()}</div>
+              <div className="text-gray-700">Date of Birth: {new Date(techOfMonth.dateOfBirth).toLocaleDateString()}</div>
             )}
             <div className="mt-1 text-yellow-800 font-medium">Completed Jobs: {techOfMonth.completedJobs}</div>
           </div>
@@ -208,8 +208,8 @@ export default function DashboardPage() {
         .catch(() => setLoading(false));
     }, []);
 
-    if (loading) return <div className="py-8 text-center">Loading analytics...</div>;
-    if (!data) return <div className="py-8 text-center">Failed to load analytics.</div>;
+    if (loading) return <div className="py-8 text-center text-gray-700">Loading analytics...</div>;
+    if (!data) return <div className="py-8 text-center text-gray-600">Failed to load analytics.</div>;
 
     // Prepare chart data
     const statusLabels = data.jobsByStatus.map((s: any) => s.status);
@@ -230,18 +230,18 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white p-6 rounded-lg shadow flex flex-col items-center">
             <div className="text-2xl font-bold text-blue-600">{data.totalJobs}</div>
-            <div className="text-gray-700 mt-2">Total Jobs</div>
+            <div className="text-gray-800 mt-2">Total Jobs</div>
           </div>
           {data.jobsByStatus.map((s: any) => (
             <div key={s.status} className="bg-white p-6 rounded-lg shadow flex flex-col items-center">
               <div className="text-2xl font-bold text-green-600">{s._count._all}</div>
-              <div className="text-gray-700 mt-2 capitalize">{s.status} Jobs</div>
+              <div className="text-gray-800 mt-2 capitalize">{s.status} Jobs</div>
             </div>
           ))}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-4">Jobs by Status</h3>
+            <h3 className="text-lg font-semibold mb-4 text-gray-900">Jobs by Status</h3>
             <Pie
               data={{
                 labels: statusLabels,
@@ -255,7 +255,7 @@ export default function DashboardPage() {
             />
           </div>
           <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-4">Jobs per Technician</h3>
+            <h3 className="text-lg font-semibold mb-4 text-gray-900">Jobs per Technician</h3>
             <Bar
               data={{
                 labels: techLabels,
@@ -277,7 +277,7 @@ export default function DashboardPage() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-4">Jobs per Job Type</h3>
+            <h3 className="text-lg font-semibold mb-4 text-gray-900">Jobs per Job Type</h3>
             <Bar
               data={{
                 labels: typeLabels,
@@ -297,7 +297,7 @@ export default function DashboardPage() {
             />
           </div>
           <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-4">Jobs Completed Per Month</h3>
+            <h3 className="text-lg font-semibold mb-4 text-gray-900">Jobs Completed Per Month</h3>
             <Line
               data={{
                 labels: monthLabels,
@@ -329,7 +329,7 @@ export default function DashboardPage() {
           <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-100">
             <div className="max-w-7xl mx-auto py-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome back, {session.user?.name}!</h2>
-              <p className="text-gray-600 mb-6">You are logged in as a admin.</p>
+              <p className="text-gray-700 mb-6">You are logged in as a admin.</p>
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-xl font-semibold text-gray-900">Jobs Overview</h3>
                 <Link
@@ -350,11 +350,11 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Link href="/jobs" className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow">
               <h3 className="text-lg font-semibold mb-4 text-blue-600">Job Management</h3>
-              <p className="text-gray-600">Create and assign jobs to technicians</p>
+              <p className="text-gray-700">Create and assign jobs to technicians</p>
             </Link>
             <Link href="/jobs/create" className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow">
               <h3 className="text-lg font-semibold mb-4 text-green-600">Create New Job</h3>
-              <p className="text-gray-600">Create a new field service job</p>
+              <p className="text-gray-700">Create a new field service job</p>
             </Link>
           </div>
         );
@@ -363,11 +363,11 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Link href="/jobs" className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow">
               <h3 className="text-lg font-semibold mb-4 text-blue-600">My Jobs</h3>
-              <p className="text-gray-600">View and update assigned jobs</p>
+              <p className="text-gray-700">View and update assigned jobs</p>
             </Link>
             <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-lg font-semibold mb-4">Reports</h3>
-              <p className="text-gray-600">Submit job completion reports</p>
+              <h3 className="text-lg font-semibold mb-4 text-gray-900">Reports</h3>
+              <p className="text-gray-700">Submit job completion reports</p>
             </div>
           </div>
         );
@@ -387,13 +387,20 @@ export default function DashboardPage() {
                 <>
                   <Link href="/admin/users" className="text-gray-700 hover:text-blue-600 font-medium">User Management</Link>
                   <Link href="/admin/job-types" className="text-gray-700 hover:text-blue-600 font-medium">Job Types</Link>
+
                   <Link href="/schedule" className="text-gray-700 hover:text-blue-600 font-medium">Schedule</Link>
+
+                  <Link href="/admin/technician-locations" className="text-gray-700 hover:text-blue-600 font-medium">Location Tracking</Link>
+
                 </>
+              )}
+              {(session.user as any).role === 'SUPERVISOR' && (
+                <Link href="/admin/technician-locations" className="text-gray-700 hover:text-blue-600 font-medium">Location Tracking</Link>
               )}
             </div>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-700">
-                Welcome, {session.user?.name} ({(session.user as any).role})
+                Welcome, <span className="font-medium text-gray-900">{session.user?.name}</span> <span className="text-gray-500">({(session.user as any).role})</span>
               </span>
               <button
                 onClick={() => signOut({ callbackUrl: '/auth/signin' })}
