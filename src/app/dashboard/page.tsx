@@ -387,7 +387,11 @@ export default function DashboardPage() {
                 <>
                   <Link href="/admin/users" className="text-gray-700 hover:text-blue-600 font-medium">User Management</Link>
                   <Link href="/admin/job-types" className="text-gray-700 hover:text-blue-600 font-medium">Job Types</Link>
+
+                  <Link href="/schedule" className="text-gray-700 hover:text-blue-600 font-medium">Schedule</Link>
+
                   <Link href="/admin/technician-locations" className="text-gray-700 hover:text-blue-600 font-medium">Location Tracking</Link>
+
                 </>
               )}
               {(session.user as any).role === 'SUPERVISOR' && (
