@@ -267,6 +267,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import DashboardLayout from '@/components/DashboardLayout';
 
 interface JobType {
   id: number;
@@ -297,8 +298,23 @@ export default function CreateJobPage() {
 
   const [jobTypes, setJobTypes] = useState<JobType[]>([]);
   const [technicians, setTechnicians] = useState<Technician[]>([]);
+  const [selectedTechnicians, setSelectedTechnicians] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  // Form state
+  const [formData, setFormData] = useState({
+    clientName: '',
+    companyName: '',
+    phoneNumber: '',
+    jobTypeId: '',
+    jobSource: '',
+    toolsRequired: '',
+    location: '',
+    startTime: '',
+    endTime: '',
+    status: 'pending'
+  });
 
   // NEW: auto-assign toggle + conflict list
   const [autoAssign, setAutoAssign] = useState(false);
@@ -352,20 +368,56 @@ export default function CreateJobPage() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const toggleTechnician = (technicianId: number) => {
+    setSelectedTechnicians(prev => 
+      prev.includes(technicianId) 
+        ? prev.filter(id => id !== technicianId)
+        : [...prev, technicianId]
+    );
+  };
+
+  const resetForm = () => {
+    setFormData({
+      clientName: '',
+      companyName: '',
+      phoneNumber: '',
+      jobTypeId: '',
+      jobSource: '',
+      toolsRequired: '',
+      location: '',
+      startTime: '',
+      endTime: '',
+      status: 'pending'
+    });
+    setSelectedTechnicians([]);
+    setError('');
+    setConflicts([]);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     setConflicts([]);
 
-    const formData = new FormData(e.currentTarget);
     const jobData = {
-      jobTypeId: formData.get('jobTypeId'),
-      status: formData.get('status'),
-      startTime: formData.get('startTime'),
-      endTime: formData.get('endTime') || null,
-      location: formData.get('location'),
-      technicianId: formData.get('technicianId') || null,
+      jobTypeId: formData.jobTypeId,
+      status: formData.status,
+      startTime: formData.startTime,
+      endTime: formData.endTime || null,
+      location: formData.location,
+      technicianId: selectedTechnicians.length > 0 ? selectedTechnicians[0] : null, // Taking first selected technician for now
+      // Additional fields can be stored in a metadata JSON field if your schema supports it
+      clientName: formData.clientName,
+      companyName: formData.companyName,
+      phoneNumber: formData.phoneNumber,
+      jobSource: formData.jobSource,
+      toolsRequired: formData.toolsRequired
     };
 
     try {
@@ -409,30 +461,26 @@ export default function CreateJobPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-3xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="mb-6">
+    <DashboardLayout>
+      <div className="min-h-screen">
+        <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+          {/* Header */}
+          <div className="mb-8">
             <Link
               href="/jobs"
-              className="text-blue-600 hover:text-blue-900 text-sm font-medium"
+              className="text-blue-600 hover:text-blue-900 text-sm font-medium mb-4 inline-block"
             >
               ← Back to Jobs
             </Link>
-            <h1 className="mt-2 text-3xl font-bold text-gray-900">Create New Job</h1>
-            <p className="mt-1 text-sm text-gray-600">
-              Create a new field service job and assign it to a technician
-            </p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Create New Job</h1>
+            <p className="text-gray-600">Fill out the form below to create a new field service job</p>
           </div>
 
-          <div className="bg-white shadow sm:rounded-lg">
-            <form onSubmit={handleSubmit} className="space-y-6 p-6">
-              {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-                  {error}
-                </div>
-              )}
-
+          {error && (
+            <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+              {error}
+            </div>
+          )}
               {conflicts.length > 0 && (
                 <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded">
                   <div className="font-semibold mb-2">Conflicting assignments:</div>
@@ -447,16 +495,22 @@ export default function CreateJobPage() {
                 </div>
               )}
 
+              <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Basic Job Info */}
+            <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
+              <h2 className="text-xl font-bold text-gray-900 mb-6 text-center">Job Details</h2>
+              
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <div>
-                  <label htmlFor="jobTypeId" className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Job Type *
                   </label>
                   <select
-                    id="jobTypeId"
                     name="jobTypeId"
+                    value={formData.jobTypeId}
+                    onChange={handleInputChange}
                     required
-                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                    className="w-full px-4 py-3 bg-blue-100 border-2 border-blue-200 rounded-xl focus:outline-none focus:border-blue-500 transition-colors text-gray-700"
                   >
                     <option value="">Select a job type</option>
                     {jobTypes.map((type) => (
@@ -468,14 +522,15 @@ export default function CreateJobPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="status" className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Status *
                   </label>
                   <select
-                    id="status"
                     name="status"
+                    value={formData.status}
+                    onChange={handleInputChange}
                     required
-                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                    className="w-full px-4 py-3 bg-blue-100 border-2 border-blue-200 rounded-xl focus:outline-none focus:border-blue-500 transition-colors text-gray-700"
                   >
                     <option value="pending">Pending</option>
                     <option value="in progress">In Progress</option>
@@ -484,67 +539,82 @@ export default function CreateJobPage() {
                   </select>
                 </div>
 
-                <div>
-                  <label htmlFor="startTime" className="block text-sm font-medium text-gray-700">
-                    Start Time *
-                  </label>
-                  <input
-                    type="datetime-local"
-                    id="startTime"
-                    name="startTime"
-                    required
-                    defaultValue={defaults.start}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="endTime" className="block text-sm font-medium text-gray-700">
-                    End Time
-                  </label>
-                  <input
-                    type="datetime-local"
-                    id="endTime"
-                    name="endTime"
-                    defaultValue={defaults.end}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  />
-                </div>
-
                 <div className="sm:col-span-2">
-                  <label htmlFor="location" className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Location *
                   </label>
                   <input
                     type="text"
-                    id="location"
                     name="location"
+                    value={formData.location}
+                    onChange={handleInputChange}
                     required
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    placeholder="Enter job location"
+                    className="w-full px-4 py-3 bg-blue-100 border-2 border-blue-200 rounded-xl focus:outline-none focus:border-blue-500 transition-colors text-gray-700"
+                    placeholder="Enter full address"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Schedule Section */}
+            <div className="bg-blue-50 p-8 rounded-2xl border border-blue-100">
+              <h2 className="text-xl font-bold text-gray-900 mb-6 text-center">Schedule</h2>
+              
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    From *
+                  </label>
+                  <input
+                    type="datetime-local"
+                    name="startTime"
+                    value={formData.startTime}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-3 bg-blue-100 border-2 border-blue-200 rounded-xl focus:outline-none focus:border-blue-500 transition-colors text-gray-700"
                   />
                 </div>
 
-                <div className="sm:col-span-2">
-                  <label htmlFor="technicianId" className="block text-sm font-medium text-gray-700">
-                    Assign to Technician
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    To
                   </label>
-                  <select
-                    id="technicianId"
-                    name="technicianId"
-                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-                  >
-                    <option value="">Unassigned</option>
-                    {technicians.map((technician) => (
-                      <option key={technician.id} value={technician.id}>
-                        {technician.name} ({technician.email})
-                      </option>
-                    ))}
-                  </select>
+                  <input
+                    type="datetime-local"
+                    name="endTime"
+                    value={formData.endTime}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 bg-blue-100 border-2 border-blue-200 rounded-xl focus:outline-none focus:border-blue-500 transition-colors text-gray-700"
+                  />
                 </div>
 
-                {/* NEW: Auto-assign toggle */}
-                <div className="sm:col-span-2 flex items-center gap-2">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    Assign Technicians
+                  </label>
+                  <div className="space-y-3 max-h-48 overflow-y-auto">
+                    {technicians.map((technician) => (
+                      <div key={technician.id} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id={`tech-${technician.id}`}
+                          checked={selectedTechnicians.includes(technician.id)}
+                          onChange={() => toggleTechnician(technician.id)}
+                          className="w-4 h-4 text-blue-600 bg-blue-100 border-blue-300 rounded focus:ring-blue-500"
+                        />
+                        <label
+                          htmlFor={`tech-${technician.id}`}
+                          className="ml-3 text-sm font-medium text-gray-700 cursor-pointer"
+                        >
+                          {technician.name} ({technician.email})
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* New-auto assign toggle */}
+                <div className="flex items-center gap-2">
                   <input
                     id="autoAssign"
                     type="checkbox"
@@ -557,26 +627,28 @@ export default function CreateJobPage() {
                   </label>
                 </div>
               </div>
+            </div>
 
-              <div className="flex justify-end space-x-3">
-                <Link
-                  href="/jobs"
-                  className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  Cancel
-                </Link>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? 'Creating...' : 'Create Job'}
-                </button>
-              </div>
-            </form>
-          </div>
+            {/* Action Buttons */}
+            <div className="flex justify-center space-x-6">
+              <button
+                type="submit"
+                disabled={loading}
+                className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-8 py-3 rounded-xl font-semibold text-lg transition-colors min-w-32"
+              >
+                {loading ? 'Creating...' : 'Create Job'}
+              </button>
+              <button
+                type="button"
+                onClick={resetForm}
+                className="bg-gray-500 hover:bg-gray-600 text-white px-8 py-3 rounded-xl font-semibold text-lg transition-colors min-w-32"
+              >
+                Reset
+              </button>
+            </div>
+          </form>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

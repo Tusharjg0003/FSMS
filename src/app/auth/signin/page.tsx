@@ -263,7 +263,7 @@ export default function SignInPage() {
           font-size: 1.875rem;
           font-weight: 800;
           color: #111827;
-          margin-top: 1.5rem;
+          
           margin-bottom: 0.5rem;
         }
 
@@ -331,12 +331,13 @@ export default function SignInPage() {
           display: block;
           width: 100%;
           padding: 0.5rem 0.75rem;
-          border: 1px solid #d1d5db;
+          border: 1px solid #8f9093ff;
           border-radius: 0.375rem;
           box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
           font-size: 0.875rem;
           line-height: 1.25rem;
           box-sizing: border-box;
+          color: #4e4e50ff;
         }
 
         .form-input:focus {

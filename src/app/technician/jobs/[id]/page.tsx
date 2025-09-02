@@ -171,7 +171,7 @@ export default function TechnicianJobDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <div className="max-w-2xl mx-auto py-8">
         <Link href="/technician/jobs" className="text-blue-600 hover:text-blue-900 text-sm font-medium">← Back to My Jobs</Link>
         <h1 className="mt-2 text-3xl font-bold text-gray-900">Job Details</h1>

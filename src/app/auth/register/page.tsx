@@ -301,13 +301,13 @@ export default function RegisterPage() {
          display: block;
          width: 100%;
          padding: 0.5rem 0.75rem;
-         border: 1px solid #6e6f74ff;
+         border: 1px solid #8f9093ff;
          border-radius: 0.375rem;
          box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
          font-size: 0.875rem;
          line-height: 1.25rem;
          box-sizing: border-box;
-         color: #6e6f74ff;
+         color: #4e4e50ff;
        }
 
        .form-input:focus {

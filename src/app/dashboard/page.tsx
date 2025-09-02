@@ -1,7 +1,6 @@
 'use client';
 
-import { useSession, signOut } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Bar, Pie, Line } from 'react-chartjs-2';
@@ -17,6 +16,8 @@ import {
   PointElement,
   LineElement,
 } from 'chart.js';
+
+import DashboardLayout from '@/components/DashboardLayout';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement);
 
@@ -38,26 +39,7 @@ type Job = {
 };
 
 export default function DashboardPage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/auth/signin');
-    }
-  }, [status, router]);
-
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="text-lg">Loading...</div>
-      </div>
-    );
-  }
-
-  if (!session || !session.user || !('role' in session.user)) {
-    return null;
-  }
+  const { data: session } = useSession();
 
   const JobsList = () => {
     const [jobs, setJobs] = useState<Job[]>([]);
@@ -83,7 +65,6 @@ export default function DashboardPage() {
 
     return (
       <div className="mb-8">
-        {/* Filter Bar */}
         <div className="flex flex-wrap gap-2 mb-4">
           {statusOptions.map((opt) => (
             <button
@@ -99,7 +80,6 @@ export default function DashboardPage() {
             </button>
           ))}
         </div>
-        {/* Jobs Table */}
         {loading ? (
           <div className="py-8 text-center text-gray-700">Loading jobs...</div>
         ) : !jobs.length ? (
@@ -129,6 +109,12 @@ export default function DashboardPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{job.technician?.name || '-'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <Link href={`/jobs/${job.id}`} className="text-blue-600 hover:text-blue-900">View</Link>
+                      {/* <button
+                        onClick={() => handleViewDetails(job)}
+                        className="text-blue-600 hover:text-blue-900"
+                      >
+                        View
+                      </button> */}
                     </td>
                   </tr>
                 ))}
@@ -148,8 +134,6 @@ export default function DashboardPage() {
       fetch('/api/admin/analytics')
         .then((res) => res.json())
         .then((data) => {
-          console.log('Analytics data:', data);
-          console.log('Technician of the month:', data.technicianOfTheMonth);
           setTechOfMonth(data.technicianOfTheMonth);
           setLoading(false);
         })
@@ -211,7 +195,6 @@ export default function DashboardPage() {
     if (loading) return <div className="py-8 text-center text-gray-700">Loading analytics...</div>;
     if (!data) return <div className="py-8 text-center text-gray-600">Failed to load analytics.</div>;
 
-    // Prepare chart data
     const statusLabels = data.jobsByStatus.map((s: any) => s.status);
     const statusCounts = data.jobsByStatus.map((s: any) => s._count._all);
 
@@ -348,37 +331,33 @@ export default function DashboardPage() {
                   />
                 </div>
               </div>
-              
           </div>
         </div>
-        
-        
       </div>
-      
     );
   };
 
   const getRoleBasedContent = () => {
+    if (!session?.user) return null;
+
     switch ((session.user as any).role) {
       case 'ADMIN':
         return (
-          <div className="min-h-screen ">
-            <div className=" mx-auto py-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome back, {session.user?.name}!</h2>
-              <p className="text-gray-700 mb-6">You are logged in as a admin.</p>
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-semibold text-gray-900">Jobs Overview</h3>
-                <Link
-                  href="/jobs/create"
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-                >
-                  Create New Job
-                </Link>
-              </div>
-              <JobsList />
-              <TechnicianOfTheMonth />
-              <Analytics />
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome back, {session.user?.name}!</h2>
+            <p className="text-gray-500 mb-6">You are logged in as a admin.</p>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-semibold text-gray-900">Jobs Overview</h3>
+              <Link
+                href="/jobs/create"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+              >
+                Create New Job
+              </Link>
             </div>
+            <JobsList />
+            <TechnicianOfTheMonth />
+            <Analytics />
           </div>
         );
       case 'SUPERVISOR':
@@ -456,4 +435,4 @@ export default function DashboardPage() {
       </main>
     </div>
   );
-} 
+}
