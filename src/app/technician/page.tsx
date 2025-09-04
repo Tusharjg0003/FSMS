@@ -4,6 +4,8 @@ import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import TechnicianDashboardLayout from '@/components/TechnicianDashboardLayout';
+
 
 interface Job {
   id: number;
@@ -57,32 +59,38 @@ export default function TechnicianDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-100">
-      <nav className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-gray-900">FSM Dashboard</h1>
+    <TechnicianDashboardLayout>
+      <div className="p-6">
+        {/* Hero Section */}
+        <div className="relative bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 rounded-2xl p-8 mb-8 text-white overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-32 translate-x-26"></div>
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full "></div>
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h1 className="text-4xl font-bold mb-2">
+                  Field Service Management System
+                </h1>
+                <p className="text-blue-100 text-lg">
+                  Easily schedule jobs, assign technicians, and keep track of everything in real time.
+                </p>
+              </div>
+              <div className="hidden lg:block">
+                <div className="w-24 h-24 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-white/30">
+                  <span className="text-3xl font-bold">FSMS</span>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center space-x-4">
-              <Link href="/technician/profile" className="text-gray-700 hover:text-blue-600 text-xl" title="Profile & Settings">
-                <span role="img" aria-label="profile">👤</span>
-              </Link>
-              <span className="text-sm text-gray-700">
-                Welcome, {session.user.name} (TECHNICIAN)
-              </span>
-              <button
-                onClick={() => signOut({ callbackUrl: '/auth/signin' })}
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-              >
-                Sign Out
-              </button>
+            
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 flex-1 border border-white/20">
+                <h3 className="text-lg font-semibold mb-1">Welcome back, {session.user?.name}!</h3>
+                <p className="text-blue-100"> Dashboard</p>
+              </div>
             </div>
           </div>
         </div>
-      </nav>
-      <div className="max-w-4xl mx-auto py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">My Jobs</h1>
+        {/* <h1 className="text-3xl font-bold text-gray-900 mb-8">My Jobs</h1>
         <div className="bg-white shadow rounded-lg overflow-x-auto">
           {jobs.length === 0 ? (
             <div className="text-center py-12">
@@ -114,7 +122,10 @@ export default function TechnicianDashboard() {
             </ul>
           )}
         </div>
+         */}
       </div>
-    </div>
+
+    </TechnicianDashboardLayout>
+    
   );
 } 

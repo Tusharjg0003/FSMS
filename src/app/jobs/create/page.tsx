@@ -497,7 +497,7 @@ export default function CreateJobPage() {
 
               <form onSubmit={handleSubmit} className="space-y-8">
             {/* Basic Job Info */}
-            <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
+            <div className="bg-blue-50 p-8 rounded-2xl shadow-lg border border-gray-100">
               <h2 className="text-xl font-bold text-gray-900 mb-6 text-center">Job Details</h2>
               
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
@@ -592,7 +592,7 @@ export default function CreateJobPage() {
                   <label className="block text-sm font-semibold text-gray-700 mb-3">
                     Assign Technicians
                   </label>
-                  <div className="space-y-3 max-h-48 overflow-y-auto">
+                  {/* <div className="space-y-3 max-h-48 overflow-y-auto">
                     {technicians.map((technician) => (
                       <div key={technician.id} className="flex items-center">
                         <input
@@ -610,7 +610,22 @@ export default function CreateJobPage() {
                         </label>
                       </div>
                     ))}
-                  </div>
+                  </div> */}
+                  <select
+                    name="assignTechnician"
+                    value={selectedTechnicians[0] || ''} // single selection
+                    onChange={(e) => setSelectedTechnicians([Number(e.target.value)])}
+                    required
+                    className="w-full px-4 py-3 bg-blue-100 border-2 border-blue-200 rounded-xl focus:outline-none focus:border-blue-500 transition-colors text-gray-700"
+                  >
+                    <option value="">Select a technician</option>
+                    {technicians.map((technician) => (
+                      <option key={technician.id} value={technician.id}>
+                        {technician.name} ({technician.email})
+                      </option>
+                    ))}
+                  </select>
+
                 </div>
                 
                 {/* New-auto assign toggle */}

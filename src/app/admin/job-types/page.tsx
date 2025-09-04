@@ -123,10 +123,10 @@ export default function AdminJobTypesPage() {
       <div className="min-h-screen">
         <div className="mx-auto py-8 px-4">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold text-gray-900">Job Types</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Job Types</h1> 
             <button
               onClick={handleAdd}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium "
             >
               Add Job Type
             </button>
@@ -165,18 +165,18 @@ export default function AdminJobTypesPage() {
             </table>
           </div>
           {showForm && (
-            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+            <div className="fixed inset-0 flex items-center justify-center z-50 backdrop-blur-xl ">
               <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
-                <h2 className="text-xl font-bold mb-4">{formMode === 'add' ? 'Add Job Type' : 'Edit Job Type'}</h2>
+                <h2 className=" text-black text-xl font-bold mb-4">{formMode === 'add' ? 'Add Job Type' : 'Edit Job Type'}</h2>
                 {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">{error}</div>}
                 <form onSubmit={handleFormSubmit} className="space-y-4">
                   <div>
                     <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name *</label>
-                    <input id="name" name="name" type="text" required value={formData.name} onChange={handleFormChange} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+                    <input id="name" name="name" type="text" required value={formData.name} onChange={handleFormChange} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-700 px-4 py-2" />
                   </div>
                   <div>
                     <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
-                    <textarea id="description" name="description" value={formData.description} onChange={handleFormChange} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+                    <textarea id="description" name="description" value={formData.description} onChange={handleFormChange} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-700 px-4 py-2" />
                   </div>
                   <div className="flex justify-end space-x-3">
                     <button
