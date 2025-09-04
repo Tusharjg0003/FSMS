@@ -49,26 +49,65 @@ import { authOptions } from '../../auth/[...nextauth]/route';
 
 const prisma = new PrismaClient();
 
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    
+    if (!id || isNaN(Number(id))) {
+      return NextResponse.json({ error: 'Job not found.' }, { status: 404 });
+    }
+    
+    const job = await prisma.job.findUnique({
+      where: { id: Number(id) },
+      include: {
+        jobType: true,
+        technician: {
+          select: { id: true, name: true, email: true }
+        },
+        reports: {
+          include: {
+            user: { select: { name: true, email: true } }
+          },
+          orderBy: { submissionDate: 'desc' }
+        }
+      }
+    });
+    
+    if (!job) {
+      return NextResponse.json({ error: 'Job not found' }, { status: 404 });
+    }
+    
+    return NextResponse.json(job);
+  } catch (error) {
+    console.error('Error fetching job:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
 function overlap(aStart: Date, aEnd: Date | null, bStart: Date, bEnd: Date | null) {
   const endA = aEnd ?? new Date(aStart.getTime() + 30 * 60 * 1000);
   const endB = bEnd ?? new Date(bStart.getTime() + 30 * 60 * 1000);
   return aStart < endB && bStart < endA;
 }
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
     if (!session || !['ADMIN', 'SUPERVISOR'].includes(session.user.role)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    if (!params.id || isNaN(Number(params.id))) {
+    if (!id || isNaN(Number(id))) {
       return NextResponse.json({ error: 'Job not found.' }, { status: 404 });
     }
 
     const body = await request.json();
     const { startTime, endTime, technicianId, status, location } = body;
 
-    const existing = await prisma.job.findUnique({ where: { id: Number(params.id) } });
+    const existing = await prisma.job.findUnique({ where: { id: Number(id) } });
     if (!existing) return NextResponse.json({ error: 'Job not found' }, { status: 404 });
 
     const newStart = startTime ? new Date(startTime) : existing.startTime;
