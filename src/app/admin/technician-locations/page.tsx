@@ -3,8 +3,8 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import TechnicianMap from '../../../components/TechnicianMap';
 import DashboardLayout from '@/components/DashboardLayout';
+import GoogleMapsTechnicianTracker from '../../../components/GoogleMapsTechnicianTracker';
 
 export default function TechnicianLocationsPage() {
   const { data: session, status } = useSession();
@@ -39,10 +39,10 @@ export default function TechnicianLocationsPage() {
             </p>
           </div>
         
-          <TechnicianMap 
-            showHistory={true}
-            refreshInterval={30000} // 30 seconds
-          />
+        <GoogleMapsTechnicianTracker 
+          showHistory={true}
+          refreshInterval={30000} // 30 seconds
+        />
         </div>
       </div>
 
