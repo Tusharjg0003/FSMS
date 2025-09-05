@@ -5,6 +5,19 @@ import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import TechnicianDashboardLayout from '@/components/TechnicianDashboardLayout';
+import { 
+  ArrowLeft,
+  Clock,
+  MapPin,
+  Building,
+  User,
+  FileText,
+  Camera,
+  Check,
+  X
+} from 'lucide-react';
+
 const SignaturePad = dynamic(() => import('react-signature-canvas'), { ssr: false });
 
 interface Job {
@@ -15,6 +28,10 @@ interface Job {
   location: string;
   jobType: { id: number; name: string };
   reports?: any[];
+  clientName?: string;
+  companyName?: string;
+  description?: string;
+  toolsRequired?: string;
 }
 
 export default function TechnicianJobDetailPage() {
@@ -97,6 +114,7 @@ export default function TechnicianJobDetailPage() {
       setSignatureData(null);
     }
   };
+
   const handleEndSignature = () => {
     if (signaturePad && !signaturePad.isEmpty()) {
       setSignatureData(signaturePad.getTrimmedCanvas().toDataURL('image/png'));
@@ -160,76 +178,284 @@ export default function TechnicianJobDetailPage() {
     }
   };
 
+  const addImage = () => {
+    document.getElementById('image-upload')?.click();
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  const formatTime = (dateString: string) => {
+    return new Date(dateString).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+  };
+
   if (status === 'loading' || loading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
+  
   if (!session || session.user?.role !== 'TECHNICIAN') {
     return null;
   }
+  
   if (!job) {
     return <div className="min-h-screen flex items-center justify-center">Job not found.</div>;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-2xl mx-auto py-8">
-        <Link href="/technician/jobs" className="text-blue-600 hover:text-blue-900 text-sm font-medium">← Back to My Jobs</Link>
-        <h1 className="mt-2 text-3xl font-bold text-gray-900">Job Details</h1>
-        <div className="bg-white shadow rounded-lg p-6 mt-4">
-          <div className="mb-2"><strong>Job Type:</strong> {job.jobType?.name}</div>
-          <div className="mb-2"><strong>Status:</strong> {job.status}</div>
-          <div className="mb-2"><strong>Location:</strong> {job.location}</div>
-          <div className="mb-2"><strong>Start Time:</strong> {job.startTime}</div>
-          <div className="mb-2"><strong>End Time:</strong> {job.endTime || 'N/A'}</div>
+    <TechnicianDashboardLayout>
+      <div className="flex-1 p-6 overflow-y-auto">
+        {/* Header */}
+        <div className="flex items-center space-x-4 mb-6">
+          <Link 
+            href="/technician/jobs" 
+            className="flex items-center space-x-2 text-slate-600 hover:text-indigo-600 transition-colors"
+          >
+            <ArrowLeft size={20} />
+            <span>Back to Jobs</span>
+          </Link>
         </div>
-        <form onSubmit={handleStatusUpdate} className="mt-6 space-y-4 bg-white shadow rounded-lg p-6">
-          <h2 className="text-lg font-semibold">Update Status</h2>
-          <select value={statusUpdate} onChange={e => setStatusUpdate(e.target.value)} className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-            <option value="pending">Pending</option>
-            <option value="in progress">In Progress</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-          <button type="submit" disabled={submitting} className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md text-sm font-medium disabled:opacity-50">{submitting ? 'Updating...' : 'Update Status'}</button>
-        </form>
-        <form onSubmit={handleReportSubmit} className="mt-6 space-y-4 bg-white shadow rounded-lg p-6">
-          <h2 className="text-lg font-semibold">Submit Completion Report</h2>
-          <textarea value={reportNotes} onChange={e => setReportNotes(e.target.value)} placeholder="Notes" className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={handleImageChange}
-            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-          />
-          {imagePreviews.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-2">
-              {imagePreviews.map((src, idx) => (
-                <img key={idx} src={src} alt={`Preview ${idx + 1}`} className="w-20 h-20 object-cover rounded border" />
-              ))}
-            </div>
-          )}
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Customer Signature</label>
-            <div className="bg-gray-100 rounded border p-2 flex flex-col items-center">
-              <SignaturePad
-                ref={setSignaturePad}
-                penColor="black"
-                canvasProps={{ width: 300, height: 120, className: 'rounded bg-white border' }}
-                onEnd={handleEndSignature}
-              />
-              <div className="flex gap-2 mt-2">
-                <button type="button" onClick={handleClearSignature} className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-3 py-1 rounded text-xs">Clear</button>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Job Details */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Job Information Card */}
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+              <div className="flex justify-between items-center mb-6 pb-4 border-b border-slate-200">
+                <h1 className="text-3xl font-bold text-slate-900">Job #{job.id}</h1>
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  job.status.toLowerCase() === 'pending' ? 'bg-blue-100 text-blue-800' :
+                  job.status.toLowerCase() === 'in progress' ? 'bg-amber-100 text-amber-800' :
+                  job.status.toLowerCase() === 'completed' ? 'bg-green-100 text-green-800' :
+                  'bg-gray-100 text-gray-800'
+                }`}>
+                  {job.status}
+                </span>
               </div>
-              {signatureData && (
-                <img src={signatureData} alt="Signature preview" className="mt-2 w-40 h-12 object-contain border rounded bg-white" />
+
+              <div className="space-y-6">
+                <div className="flex items-center space-x-2 text-slate-600">
+                  <Clock size={16} />
+                  <span>
+                    {formatDate(job.startTime)} {formatTime(job.startTime)}
+                    {job.endTime && ` - ${formatTime(job.endTime)}`}
+                  </span>
+                </div>
+
+                <div>
+                  <label className="block text-lg font-semibold text-slate-900 mb-2">Address:</label>
+                  <div className="flex items-start space-x-2 text-slate-600">
+                    <MapPin size={16} className="mt-1 flex-shrink-0" />
+                    <p>{job.location}</p>
+                  </div>
+                </div>
+
+                {(job.clientName || job.companyName) && (
+                  <div>
+                    <label className="block text-lg font-semibold text-slate-900 mb-2">Client:</label>
+                    <div className="flex items-center space-x-2 text-slate-600">
+                      <User size={16} />
+                      <p>
+                        {job.clientName && job.companyName 
+                          ? `${job.clientName} - ${job.companyName}`
+                          : job.clientName || job.companyName || 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-lg font-semibold text-slate-900 mb-2">Job Type:</label>
+                  <p className="text-slate-600">{job.jobType?.name}</p>
+                </div>
+
+                {job.description && (
+                  <div>
+                    <label className="block text-lg font-semibold text-slate-900 mb-2">Description:</label>
+                    <p className="text-slate-600 leading-relaxed">{job.description}</p>
+                  </div>
+                )}
+
+                {job.toolsRequired && (
+                  <div>
+                    <label className="block text-lg font-semibold text-slate-900 mb-2">Tools Required:</label>
+                    <p className="text-slate-600">{job.toolsRequired}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Status Update Card */}
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+              <h2 className="text-xl font-semibold text-slate-900 mb-4">Update Status</h2>
+              <form onSubmit={handleStatusUpdate} className="space-y-4">
+                <select 
+                  value={statusUpdate} 
+                  onChange={e => setStatusUpdate(e.target.value)} 
+                  className="block w-full border-slate-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 px-4 py-2 text-gray-700"
+                >
+                  <option value="pending">Pending</option>
+                  <option value="in progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+                <button 
+                  type="submit" 
+                  disabled={submitting}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg font-medium disabled:opacity-50 transition-colors"
+                >
+                  {submitting ? 'Updating...' : 'Update Status'}
+                </button>
+              </form>
+            </div>
+
+            {/* Completion Report Card */}
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+              <h2 className="text-xl font-semibold text-slate-900 mb-4">Submit Completion Report</h2>
+              <form onSubmit={handleReportSubmit} className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">Report Notes</label>
+                  <textarea 
+                    value={reportNotes} 
+                    onChange={e => setReportNotes(e.target.value)} 
+                    placeholder="Add your completion notes here..."
+                    rows={4}
+                    className="block w-full border-slate-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 px-4 py-2"
+                  />
+                </div>
+
+                {/* Image Upload Section */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-4">Upload Images</label>
+                  
+
+                  <input
+                    id="image-upload"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
+                  
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={addImage}
+                      className="bg-slate-100 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-200 transition-colors flex items-center space-x-2 border border-slate-200"
+                    >
+                      <Camera size={16} />
+                      <span>Add Images</span>
+                    </button>
+                  </div>
+
+                  {imagePreviews.length > 0 && (
+                    <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mt-4">
+                      {imagePreviews.map((src, idx) => (
+                        <img 
+                          key={idx} 
+                          src={src} 
+                          alt={`Preview ${idx + 1}`} 
+                          className="w-full h-20 object-cover rounded border"
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Signature Section */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Customer Signature</label>
+                  <div className="bg-slate-50 rounded-lg border border-slate-200 p-4 flex flex-col items-center">
+                    <SignaturePad
+                      ref={setSignaturePad}
+                      penColor="black"
+                      canvasProps={{ width: 300, height: 120, className: 'rounded bg-white border' }}
+                      onEnd={handleEndSignature}
+                    />
+                    <div className="flex gap-2 mt-2">
+                      <button 
+                        type="button" 
+                        onClick={handleClearSignature} 
+                        className="bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-1 rounded text-sm transition-colors"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                    {signatureData && (
+                      <img 
+                        src={signatureData} 
+                        alt="Signature preview" 
+                        className="mt-2 w-40 h-12 object-contain border rounded bg-white"
+                      />
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex space-x-4">
+                  <button 
+                    type="submit" 
+                    disabled={submitting}
+                    className="bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg font-medium disabled:opacity-50 transition-colors flex items-center space-x-2"
+                  >
+                    <Check size={16} />
+                    <span>{submitting ? 'Submitting...' : 'Submit Report'}</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          {/* Reports Sidebar */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+              <h3 className="text-lg font-semibold text-slate-900 mb-4">Previous Reports</h3>
+              {job.reports && job.reports.length > 0 ? (
+                <div className="space-y-4">
+                  {job.reports.map((report: any, index: number) => (
+                    <div key={index} className="border border-slate-200 rounded-lg p-4">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <FileText size={16} className="text-slate-500" />
+                        <span className="text-sm font-medium text-slate-900">Report #{index + 1}</span>
+                      </div>
+                      {report.notes && (
+                        <p className="text-sm text-slate-600 mb-2">{report.notes}</p>
+                      )}
+                      {report.images && report.images.length > 0 && (
+                        <div className="text-sm text-slate-500">
+                          {report.images.length} image(s) attached
+                        </div>
+                      )}
+                      {report.signature && (
+                        <div className="text-sm text-slate-500">
+                          Customer signature included
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-slate-500 text-sm">No reports submitted yet.</p>
               )}
             </div>
           </div>
-          <button type="submit" disabled={submitting} className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md text-sm font-medium disabled:opacity-50">{submitting ? 'Submitting...' : 'Submit Report'}</button>
-        </form>
-        {error && <div className="mt-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">{error}</div>}
+        </div>
+
+        {/* Error Display */}
+        {error && (
+          <div className="mt-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            {error}
+          </div>
+        )}
       </div>
-    </div>
+    </TechnicianDashboardLayout>
   );
-} 
+}
