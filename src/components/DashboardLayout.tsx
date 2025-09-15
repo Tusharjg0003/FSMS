@@ -117,22 +117,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
           </div>
           <div>
-            {/* <SidebarLink
-              link={{
-                label: session.user?.name || "User",
-                href: "/profile",
-                icon: <IconUserCircle className="h-7 w-7 shrink-0" />,
-              }}
-            /> */}
-            {/* <div 
-              onClick={() => signOut({ callbackUrl: '/auth/signin' })}
-              className="flex items-center justify-start gap-2 group/sidebar py-2 px-2 rounded-md hover:bg-[#517BBF] hover:bg-opacity-40 transition-colors cursor-pointer text-black group-hover/sidebar:text-white"
-            >
-              <IconLogout className="h-7 w-7 shrink-0" />
-              <span className="text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0">
-                Sign Out
-              </span>
-            </div> */}
             
             <SidebarLink
               link={{

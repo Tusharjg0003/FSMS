@@ -157,15 +157,18 @@ export const MobileSidebar = ({
 export const SidebarLink = ({
   link,
   className,
+  onClick,
   ...props
 }: {
   link: Links;
   className?: string;
+  onClick?: (e: React.MouseEvent) => void;
 }) => {
   const { open, animate } = useSidebar();
   return (
     <a
       href={link.href}
+      onClick={onClick}
       className={cn(
         "flex items-center justify-start gap-2 group/sidebar py-2 px-2 rounded-md hover:bg-[#517BBF] transition-colors text-black",
         className

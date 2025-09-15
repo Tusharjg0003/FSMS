@@ -110,6 +110,11 @@ const TechnicianDashboardLayout: React.FC<TechnicianDashboardLayoutProps> = ({ c
     }
   ];
 
+  const handleSignOut = (e: React.MouseEvent) => {
+    e.preventDefault();
+    signOut({ callbackUrl: '/auth/signin' });
+  };
+
   return (
     <div className="rounded-md flex flex-col md:flex-row bg-gray-100 dark:bg-neutral-800 w-full flex-1 mx-auto overflow-y-auto h-screen">
       <Sidebar open={open} setOpen={setOpen}>
@@ -141,17 +146,15 @@ const TechnicianDashboardLayout: React.FC<TechnicianDashboardLayoutProps> = ({ c
                 href: "/technician/profile",
                 icon: <IconUserCircle className="h-7 w-7 shrink-0" />,
               }}
-              className={isActivePath('/technician/profile') ? "bg-[#517BBF] bg-opacity-40 text-black" : ""}
             />
-            <div 
-              onClick={() => signOut({ callbackUrl: '/auth/signin' })}
-              className="flex items-center justify-start gap-2 group/sidebar py-2 px-2 rounded-md hover:bg-[#517BBF] hover:bg-opacity-40 transition-colors cursor-pointer text-black"
-            >
-              <IconLogout className="h-7 w-7 shrink-0" />
-              <span className="text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0">
-                Sign Out
-              </span>
-            </div>
+            <SidebarLink
+              link={{
+                label: "Sign Out",
+                href: "#",
+                icon: <IconLogout className="h-7 w-7 shrink-0" />,
+              }}
+              onClick={handleSignOut}
+            />
           </div>
         </SidebarBody>
       </Sidebar>
