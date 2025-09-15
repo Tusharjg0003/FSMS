@@ -22,7 +22,7 @@ export default function SignInPage() {
     // Start letter animation immediately
     const letterTimer = setTimeout(() => {
       setShowLetters(true);
-    }, 100);
+    }, 90);
 
     // Show login after letters finish animating
     const loginTimer = setTimeout(() => {
@@ -170,7 +170,7 @@ export default function SignInPage() {
           display: flex;
           gap: 5rem;
           z-index: 1;
-          transition: all 1s ease-out;
+          transition: all 0.5s ease-out;
         }
 
         .background-letters.fade-to-background {

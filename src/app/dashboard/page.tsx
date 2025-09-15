@@ -7,10 +7,8 @@ import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import SchedulePage from '../schedule/page';
 import React from 'react';
-import { 
-  Users, 
+import {  
   Calendar,
-  Settings
 } from 'lucide-react';
 
 type Job = {
@@ -160,11 +158,37 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Quick Stats */}
-            {/* <JobsList /> */}
+          </div>
+        );
 
-            {/* <TechnicianOfTheMonth /> */}
-            {/* <SchedulePage/> */}
+        case 'SUPERVISOR':
+        return (
+          <div>
+            {/* Hero Section for Supervisor */}
+            <div className="relative bg-gradient-to-r from-green-600 via-green-700 to-emerald-800 rounded-2xl p-8 mb-8 text-white overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-32 translate-x-32"></div>
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-24 -translate-x-24"></div>
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h1 className="text-4xl font-bold mb-2">
+                      Supervisor Dashboard
+                    </h1>
+                    <p className="text-green-100 text-lg">
+                      Monitor team performance, oversee operations, and ensure quality service delivery.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 flex-1 border border-white/20">
+                    <h3 className="text-lg font-semibold mb-1">Welcome back, {session.user?.name}!</h3>
+                    <p className="text-green-100"> Dashboard</p>
+                  </div>
+                </div>
+                <SchedulePage/>
+              </div>
+            </div>
           </div>
         );
         

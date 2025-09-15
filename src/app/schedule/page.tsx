@@ -14,16 +14,33 @@ type Job = {
   technician?: { id: number; name: string; email: string };
 };
 
+type Technician = {
+  id: number;
+  name: string;
+  email: string;
+};
+
 // Changed to 24 hours (0-23)
 const HOURS = Array.from({ length: 24 }).map((_, i) => i); // 00:00..23:00
 
 export default function SchedulePage() {
   const { data: session } = useSession();
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [technicians, setTechnicians] = useState<Technician[]>([]);
   const [weekStart, setWeekStart] = useState<Date>(startOfWeek(new Date(), { weekStartsOn: 1 })); // Mon
-  const [techFilter, setTechFilter] = useState<string>('');
+  const [selectedTechnicians, setSelectedTechnicians] = useState<number[]>([]);
 
   const weekDays = useMemo(() => Array.from({ length: 7 }).map((_, i) => addDays(weekStart, i)), [weekStart]);
+
+  // Fetch technicians
+  useEffect(() => {
+    if (session?.user?.role === 'ADMIN' || session?.user?.role === 'SUPERVISOR') {
+      fetch('/api/users?role=TECHNICIAN')
+        .then(res => res.json())
+        .then(setTechnicians)
+        .catch(err => console.error('Error fetching technicians:', err));
+    }
+  }, [session]);
 
   useEffect(() => {
     const from = weekDays[0].toISOString();
@@ -31,9 +48,12 @@ export default function SchedulePage() {
     const url = new URL('/api/jobs', window.location.origin);
     url.searchParams.set('from', from);
     url.searchParams.set('to', to);
-    if (techFilter) url.searchParams.set('technicianId', techFilter);
+    // Use the first selected technician for filtering
+    if (selectedTechnicians.length > 0) {
+      url.searchParams.set('technicianId', selectedTechnicians[0].toString());
+    }
     fetch(url.toString()).then(res => res.json()).then(setJobs);
-  }, [weekDays, techFilter]);
+  }, [weekDays, selectedTechnicians]);
 
   function moveWeek(delta: number) {
     setWeekStart(addDays(weekStart, 7 * delta));
@@ -136,16 +156,27 @@ export default function SchedulePage() {
         </div>
       </div>
 
-      {/* Optional technician filter for admins */}
+      {/* Technician filter section for admins */}
       {(session?.user?.role === 'ADMIN' || session?.user?.role === 'SUPERVISOR') && (
-        <div className="mb-4">
-          <input
-            type="number"
-            placeholder="Filter by Technician ID (optional)"
-            className="border rounded px-3 py-2"
-            value={techFilter}
-            onChange={(e) => setTechFilter(e.target.value)}
-          />
+        <div className=" p-6 rounded-2xl shadow-lg mb-6">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-3 text-white">
+              Select Technician
+            </label>
+            <select
+              name="assignTechnician"
+              value={selectedTechnicians[0] || ''} // single selection
+              onChange={(e) => setSelectedTechnicians(e.target.value ? [Number(e.target.value)] : [])}
+              className="w-full px-4 py-3 bg-blue-100 border-2 border-blue-200 rounded-xl focus:outline-none focus:border-blue-500 transition-colors text-gray-700"
+            >
+              <option value="">All technicians</option>
+              {technicians.map((technician) => (
+                <option key={technician.id} value={technician.id}>
+                  {technician.name} ({technician.email})
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       )}
 
@@ -209,7 +240,7 @@ export default function SchedulePage() {
       </div>
 
       <p className="mt-4 text-sm text-white">
-        Tip: Use Technician ID filter to inspect individual availability. Multi-day jobs show as separate blocks with (Start), (Cont.), and (End) labels.
+        Tip: Use the technician filter above to inspect individual availability. Multi-day jobs show as separate blocks with (Start), (Cont.), and (End) labels.
       </p>
     </div>
   );
