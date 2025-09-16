@@ -6,7 +6,8 @@ import { authOptions } from '../../../auth/[...nextauth]/route';
 const prisma = new PrismaClient();
 
 export async function POST(request: NextRequest, context: { params: { id: string } }) {
-  const { params } = context;
+  const params = await context.params;
+
   try {
     const session = await getServerSession(authOptions);
     if (!session) {

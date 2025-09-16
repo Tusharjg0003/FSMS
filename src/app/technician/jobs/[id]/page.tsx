@@ -62,6 +62,9 @@ export default function TechnicianJobDetailPage() {
     if (jobId) fetchJob();
   }, [jobId]);
 
+  //Check if status updates should be allowed (happens when tech mark the task completed)
+  const canUpdateStatus = job ? job.status.toLowerCase() !== 'completed' : false;
+
   const fetchJob = async () => {
     setLoading(true);
     try {
@@ -293,29 +296,44 @@ export default function TechnicianJobDetailPage() {
               </div>
             </div>
 
-            {/* Status Update Card */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
-              <h2 className="text-xl font-semibold text-slate-900 mb-4">Update Status</h2>
-              <form onSubmit={handleStatusUpdate} className="space-y-4">
-                <select 
-                  value={statusUpdate} 
-                  onChange={e => setStatusUpdate(e.target.value)} 
-                  className="block w-full border-slate-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 px-4 py-2 text-gray-700"
-                >
-                  <option value="pending">Pending</option>
-                  <option value="in progress">In Progress</option>
-                  <option value="completed">Completed</option>
-                  <option value="cancelled">Cancelled</option>
-                </select>
-                <button 
-                  type="submit" 
-                  disabled={submitting}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg font-medium disabled:opacity-50 transition-colors"
-                >
-                  {submitting ? 'Updating...' : 'Update Status'}
-                </button>
-              </form>
-            </div>
+            {/* Status Update Card - Only show if job is NOT completed */}
+            {canUpdateStatus && (
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+                <h2 className="text-xl font-semibold text-slate-900 mb-4">Update Status</h2>
+                <form onSubmit={handleStatusUpdate} className="space-y-4">
+                  <select 
+                    value={statusUpdate} 
+                    onChange={e => setStatusUpdate(e.target.value)} 
+                    className="block w-full border-slate-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 px-4 py-2 text-gray-700"
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="in progress">In Progress</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                  <button 
+                    type="submit" 
+                    disabled={submitting}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg font-medium disabled:opacity-50 transition-colors"
+                  >
+                    {submitting ? 'Updating...' : 'Update Status'}
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {/*Show message when job is completed */}
+            {!canUpdateStatus && (
+              <div className="bg-green-50 rounded-xl p-6 shadow-sm border border-green-200">
+                <div className="flex items-center space-x-2">
+                  <Check size={20} className="text-green-600" />
+                  <h2 className="text-xl font-semibold text-green-900">Job Completed</h2>
+                </div>
+                <p className="text-green-700 mt-2">
+                  This job has been marked as completed. You can still submit additional reports if needed.
+                </p>
+              </div>
+            )}
 
             {/* Completion Report Card */}
             <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
