@@ -7,8 +7,6 @@ import Link from 'next/link';
 import LocationTracker from '../../../components/LocationTracker';
 import TechnicianDashboardLayout from '@/components/TechnicianDashboardLayout';
 import { 
-  Check, 
-  X, 
   Clock, 
   MapPin, 
   Building,
@@ -38,7 +36,6 @@ export default function TechnicianJobsPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
-  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -66,69 +63,6 @@ export default function TechnicianJobsPage() {
       console.error('Error fetching jobs:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const getJobsByStatus = (status: string) => {
-    return jobs.filter(job => 
-      status === 'New' ? job.status.toLowerCase() === 'pending' :
-      status === 'In Progress' ? job.status.toLowerCase() === 'in progress' :
-      status === 'Completed' ? job.status.toLowerCase() === 'completed' :
-      false
-    );
-  };
-
-  const acceptJob = async (job: Job) => {
-    setSubmitting(true);
-    try {
-      const res = await fetch(`/api/jobs/${job.id}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'in progress' }),
-      });
-      if (res.ok) {
-        fetchJobs();
-      }
-    } catch (error) {
-      console.error('Error accepting job:', error);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const rejectJob = async (job: Job) => {
-    setSubmitting(true);
-    try {
-      const res = await fetch(`/api/jobs/${job.id}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'cancelled' }),
-      });
-      if (res.ok) {
-        fetchJobs();
-      }
-    } catch (error) {
-      console.error('Error rejecting job:', error);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const completeJob = async (job: Job) => {
-    setSubmitting(true);
-    try {
-      const res = await fetch(`/api/jobs/${job.id}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'completed' }),
-      });
-      if (res.ok) {
-        fetchJobs();
-      }
-    } catch (error) {
-      console.error('Error completing job:', error);
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -209,40 +143,6 @@ export default function TechnicianJobsPage() {
                         {job.location}
                       </div>
                     </div>
-
-                    {job.status.toLowerCase() === 'pending' && (
-                      <div className="flex space-x-2 mb-2">
-                        <button
-                          onClick={(e) => { e.stopPropagation(); acceptJob(job); }}
-                          disabled={submitting}
-                          className="w-8 h-8 bg-green-100 text-green-600 rounded hover:bg-green-600 hover:text-white transition-colors flex items-center justify-center disabled:opacity-50"
-                          title="Accept Job"
-                        >
-                          <Check size={16} />
-                        </button>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); rejectJob(job); }}
-                          disabled={submitting}
-                          className="w-8 h-8 bg-red-100 text-red-600 rounded hover:bg-red-600 hover:text-white transition-colors flex items-center justify-center disabled:opacity-50"
-                          title="Reject Job"
-                        >
-                          <X size={16} />
-                        </button>
-                      </div>
-                    )}
-
-                    {job.status.toLowerCase() === 'in progress' && (
-                      <div className="mb-2">
-                        <button
-                          onClick={(e) => { e.stopPropagation(); completeJob(job); }}
-                          disabled={submitting}
-                          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors flex items-center space-x-2 disabled:opacity-50"
-                        >
-                          <Check size={16} />
-                          <span>Done</span>
-                        </button>
-                      </div>
-                    )}
 
                     <Link
                       href={`/technician/jobs/${job.id}`}
@@ -326,36 +226,6 @@ export default function TechnicianJobsPage() {
                       <FileText size={16} />
                       <span>Full Details & Report</span>
                     </Link>
-                    {selectedJob.status.toLowerCase() === 'pending' && (
-                      <>
-                        <button
-                          onClick={() => acceptJob(selectedJob)}
-                          disabled={submitting}
-                          className="bg-green-600 text-white px-5 py-3 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2 disabled:opacity-50"
-                        >
-                          <Check size={16} />
-                          <span>Accept</span>
-                        </button>
-                        <button
-                          onClick={() => rejectJob(selectedJob)}
-                          disabled={submitting}
-                          className="bg-red-600 text-white px-5 py-3 rounded-lg hover:bg-red-700 transition-colors flex items-center space-x-2 disabled:opacity-50"
-                        >
-                          <X size={16} />
-                          <span>Reject</span>
-                        </button>
-                      </>
-                    )}
-                    {selectedJob.status.toLowerCase() === 'in progress' && (
-                      <button
-                        onClick={() => completeJob(selectedJob)}
-                        disabled={submitting}
-                        className="bg-green-600 text-white px-5 py-3 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2 disabled:opacity-50"
-                      >
-                        <Check size={16} />
-                        <span>Complete Job</span>
-                      </button>
-                    )}
                   </div>
                 </div>
               </div>

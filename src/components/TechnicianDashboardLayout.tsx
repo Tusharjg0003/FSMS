@@ -102,11 +102,6 @@ const TechnicianDashboardLayout: React.FC<TechnicianDashboardLayoutProps> = ({ c
       label: "My Jobs",
       href: "/technician/jobs", 
       icon: <IconBriefcase className="h-7 w-7 shrink-0" />,
-    },
-    {
-      label: "Job History",
-      href: "/technician/history",
-      icon: <IconHistory className="h-7 w-7 shrink-0" />,
     }
   ];
 
