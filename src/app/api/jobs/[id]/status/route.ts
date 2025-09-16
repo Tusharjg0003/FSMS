@@ -6,7 +6,7 @@ import { authOptions } from '../../../auth/[...nextauth]/route';
 const prisma = new PrismaClient();
 
 export async function PATCH(request: NextRequest, context: { params: { id: string } }) {
-  const { params } = context;
+  const params = await context.params;
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
@@ -27,6 +27,15 @@ export async function PATCH(request: NextRequest, context: { params: { id: strin
     if (!newStatus) {
       return NextResponse.json({ error: 'Status is required' }, { status: 400 });
     }
+
+    //consider the situation
+    //No one can reopen completed jobs
+    if (job.status.toLowerCase() === 'completed' && newStatus.toLowerCase() !== 'completed') {
+      return NextResponse.json({ 
+        error: 'Cannot change status of completed jobs' 
+      }, { status: 400 });
+    }
+
     const updatedJob = await prisma.job.update({
       where: { id: Number(params.id) },
       data: { status: newStatus },
