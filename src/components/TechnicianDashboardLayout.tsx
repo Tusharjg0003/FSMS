@@ -7,8 +7,6 @@ import { Sidebar, SidebarBody, SidebarLink } from '@/components/ui/sidebar';
 import {
   IconHome,
   IconBriefcase,
-  IconHistory,
-  IconCalendar,
   IconUserCircle,
   IconLogout,
   IconBell
@@ -128,7 +126,6 @@ const TechnicianDashboardLayout: React.FC<TechnicianDashboardLayoutProps> = ({ c
                     link={link}
                     className={isActivePath(link.href) ? "bg-[#517BBF] bg-opacity-40 text-black" : ""}
                   />
-                  {/* Job notification badge for My Jobs */}
                   {link.href === "/technician/jobs" && newJobsCount > 0 && (
                     <div className="absolute right-3 top-3 bg-red-500 text-white text-xs px-2 py-1 rounded-full min-w-[20px] h-5 flex items-center justify-center">
                       {newJobsCount}

@@ -3,9 +3,8 @@
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import TechnicianDashboardLayout from '@/components/TechnicianDashboardLayout';
-
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface Job {
   id: number;
@@ -21,6 +20,10 @@ export default function TechnicianDashboard() {
   const router = useRouter();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Calendar states
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -51,6 +54,56 @@ export default function TechnicianDashboard() {
     }
   };
 
+  // Calendar functions
+  const getWeekDates = () => {
+    const start = new Date(currentDate);
+    const day = start.getDay();
+    const diff = start.getDate() - day;
+    const weekStart = new Date(start.setDate(diff));
+    
+    return Array.from({ length: 7 }, (_, i) => {
+      const date = new Date(weekStart);
+      date.setDate(weekStart.getDate() + i);
+      return date;
+    });
+  };
+
+  const getJobsForDate = (date: Date) => {
+    return jobs.filter(job => {
+      const jobDate = new Date(job.startTime);
+      return jobDate.toDateString() === date.toDateString();
+    });
+  };
+
+  const isToday = (date: Date) => {
+    const today = new Date();
+    return date.toDateString() === today.toDateString();
+  };
+
+  const isSelected = (date: Date) => {
+    return date.toDateString() === selectedDate.toDateString();
+  };
+
+  const navigateWeek = (direction: 'prev' | 'next') => {
+    const newDate = new Date(currentDate);
+    newDate.setDate(currentDate.getDate() + (direction === 'next' ? 7 : -7));
+    setCurrentDate(newDate);
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'completed':
+        return 'bg-green-500';
+      case 'in progress':
+        return 'bg-blue-500';
+      case 'pending':
+      case 'new':
+        return 'bg-yellow-500';
+      default:
+        return 'bg-gray-500';
+    }
+  };
+
   if (status === 'loading' || loading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
@@ -58,13 +111,16 @@ export default function TechnicianDashboard() {
     return null;
   }
 
+  const weekDates = getWeekDates();
+  const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+
   return (
     <TechnicianDashboardLayout>
       <div className="p-6">
-        {/* Hero Section */}
+        {/* Hero Section with Calendar */}
         <div className="relative bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 rounded-2xl p-8 mb-8 text-white overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-32 translate-x-26"></div>
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full "></div>
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full"></div>
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-6">
               <div>
@@ -82,50 +138,105 @@ export default function TechnicianDashboard() {
               </div>
             </div>
             
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 flex-1 border border-white/20">
-                <h3 className="text-lg font-semibold mb-1">Welcome back, {session.user?.name}!</h3>
-                <p className="text-blue-100"> Dashboard</p>
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20 mb-6">
+              <h3 className="text-lg font-semibold mb-1">Welcome back, {session.user?.name}!</h3>
+              <p className="text-blue-100">Dashboard</p>
+            </div>
+
+            {/* Calendar Section */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+              <div className="flex items-center justify-between mb-4">
+                <button 
+                  onClick={() => navigateWeek('prev')}
+                  className="p-1 hover:bg-white/20 rounded-full transition-colors"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <h3 className="font-semibold">
+                  {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                </h3>
+                <button 
+                  onClick={() => navigateWeek('next')}
+                  className="p-1 hover:bg-white/20 rounded-full transition-colors"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-7 gap-2">
+                {weekDates.map((date, index) => {
+                  const jobsForDay = getJobsForDate(date);
+                  const hasJobs = jobsForDay.length > 0;
+                  
+                  return (
+                    <div
+                      key={index}
+                      onClick={() => setSelectedDate(date)}
+                      className={`
+                        relative cursor-pointer rounded-lg p-2 md:p-3 transition-all
+                        ${isSelected(date) ? 'bg-white text-blue-600 shadow-lg transform scale-105' : 
+                          isToday(date) ? 'bg-blue-500/30 border-2 border-white/50' : 
+                          'bg-white/5 hover:bg-white/10'}
+                      `}
+                    >
+                      <div className="text-center">
+                        <div className={`text-xs font-medium ${isSelected(date) ? 'text-blue-600' : 'text-blue-200'}`}>
+                          {dayNames[index]}
+                        </div>
+                        <div className={`text-lg md:text-xl font-bold mt-1 ${isSelected(date) ? 'text-blue-600' : ''}`}>
+                          {date.getDate()}
+                        </div>
+                        
+                        {hasJobs && (
+                          <div className="mt-2 flex flex-col gap-1">
+                            {jobsForDay.slice(0, 2).map((job, jobIndex) => (
+                              <div 
+                                key={jobIndex}
+                                className={`h-1 rounded-full ${getStatusColor(job.status)}`}
+                              />
+                            ))}
+                            {jobsForDay.length > 2 && (
+                              <div className={`text-[10px] font-semibold ${isSelected(date) ? 'text-blue-600' : 'text-white'}`}>
+                                +{jobsForDay.length - 2}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Selected Date Jobs Summary */}
+              <div className="mt-4 bg-white/10 rounded-lg p-3 border border-white/20">
+                <h4 className="font-semibold text-sm mb-2">
+                  Tasks for {selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+                </h4>
+                {getJobsForDate(selectedDate).length > 0 ? (
+                  <div className="space-y-2">
+                    {getJobsForDate(selectedDate).slice(0, 3).map((job, index) => (
+                      <div key={index} className="flex items-center justify-between text-sm bg-white/5 rounded px-2 py-1">
+                        <span className="truncate flex-1">{job.jobType.name}</span>
+                        <span className={`px-2 py-0.5 rounded-full text-xs ${getStatusColor(job.status)} text-white ml-2`}>
+                          {job.status}
+                        </span>
+                      </div>
+                    ))}
+                    {getJobsForDate(selectedDate).length > 3 && (
+                      <div className="text-xs text-blue-200">
+                        +{getJobsForDate(selectedDate).length - 3} more tasks
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-blue-200">No tasks scheduled</p>
+                )}
               </div>
             </div>
           </div>
         </div>
-        {/* <h1 className="text-3xl font-bold text-gray-900 mb-8">My Jobs</h1>
-        <div className="bg-white shadow rounded-lg overflow-x-auto">
-          {jobs.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-500">No jobs assigned.</p>
-            </div>
-          ) : (
-            <ul className="divide-y divide-gray-200">
-              {jobs.map((job) => (
-                <li key={job.id}>
-                  <div className="px-4 py-4 sm:px-6 flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center">
-                        <p className="text-sm font-medium text-gray-900">{job.jobType.name}</p>
-                        <span className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${job.status === 'completed' ? 'bg-green-100 text-green-800' : job.status === 'in progress' ? 'bg-blue-100 text-blue-800' : job.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-800'}`}>{job.status}</span>
-                      </div>
-                      <div className="mt-1 flex items-center text-sm text-gray-500">
-                        <p>{job.location}</p>
-                        <span className="mx-2">•</span>
-                        <p>Start: {new Date(job.startTime).toLocaleString()}</p>
-                        {job.endTime && <><span className="mx-2">•</span><p>End: {new Date(job.endTime).toLocaleString()}</p></>}
-                      </div>
-                    </div>
-                    <div>
-                      <Link href={`/technician/jobs/${job.id}`} className="text-blue-600 hover:text-blue-900 text-sm font-medium">View Details</Link>
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-         */}
       </div>
-
     </TechnicianDashboardLayout>
-    
   );
-} 
+}
