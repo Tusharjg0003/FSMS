@@ -13,6 +13,7 @@ import {
   IconLogout,
   IconBell
 } from '@tabler/icons-react';
+import { AnimatePresence, motion } from 'framer-motion';
 
 interface TechnicianDashboardLayoutProps {
   children: React.ReactNode;
@@ -34,6 +35,7 @@ const TechnicianDashboardLayout: React.FC<TechnicianDashboardLayoutProps> = ({ c
   const [open, setOpen] = useState(false);
   const [assignedJobs, setAssignedJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showProfilePopup, setShowProfilePopup] = useState(false);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -107,15 +109,18 @@ const TechnicianDashboardLayout: React.FC<TechnicianDashboardLayoutProps> = ({ c
 
   const handleSignOut = (e: React.MouseEvent) => {
     e.preventDefault();
+    setShowProfilePopup(false);
     signOut({ callbackUrl: '/auth/signin' });
   };
 
   return (
     <div className="rounded-md flex flex-col md:flex-row bg-gray-100 dark:bg-neutral-800 w-full flex-1 mx-auto overflow-y-auto h-screen">
       <Sidebar open={open} setOpen={setOpen}>
-        <SidebarBody className="justify-between gap-10">
-        <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
-            
+        <SidebarBody 
+          className="justify-between gap-10"
+          navigationLinks={navigationLinks}
+        >
+          <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
             <div className="mt-8 flex flex-col gap-2">
               {navigationLinks.map((link, idx) => (
                 <div key={idx} className="relative">
@@ -162,6 +167,68 @@ const TechnicianDashboardLayout: React.FC<TechnicianDashboardLayoutProps> = ({ c
             {children}
           </main>
         </div>
+      </div>
+
+      {/* Profile Circle Button - Bottom Right Corner (Mobile Only) */}
+      <div className="fixed bottom-6 right-6 z-50 md:hidden">
+        <motion.button
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          onClick={() => setShowProfilePopup(!showProfilePopup)}
+          className="bg-white/90 backdrop-blur-md rounded-full p-3 shadow-xl border border-gray-200/50 hover:bg-white transition-colors"
+        >
+          <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
+            <span className="text-white text-lg font-bold">
+              {session.user?.name?.charAt(0)?.toUpperCase() || 'T'}
+            </span>
+          </div>
+        </motion.button>
+
+        {/* Sign Out Confirmation Popup */}
+        <AnimatePresence>
+          {showProfilePopup && (
+            <>
+              {/* Backdrop */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/30 -z-10"
+                onClick={() => setShowProfilePopup(false)}
+              />
+              
+              {/* Popup */}
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                className="absolute bottom-full right-0 mb-3 bg-white rounded-xl shadow-lg border border-gray-200 p-2 min-w-[160px]"
+              >
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowProfilePopup(false);
+                    router.push('/technician/profile');
+                  }}
+                  className="w-full flex items-center justify-center space-x-2 p-3 hover:bg-gray-100 rounded-lg transition-colors mb-1"
+                >
+                  <IconUserCircle className="w-4 h-4 text-gray-600" />
+                  <span className="text-gray-700 font-medium text-sm">View Profile</span>
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSignOut(e);
+                  }}
+                  className="w-full flex items-center justify-center space-x-2 p-3 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                >
+                  <IconLogout className="w-4 h-4 text-red-600" />
+                  <span className="text-red-700 font-medium text-sm">Sign Out</span>
+                </button>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

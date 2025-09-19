@@ -55,7 +55,7 @@ export default function AdminAnalyticsPage() {
     const monthCounts = data.jobsCompletedPerMonth.map((m: any) => m.count);
 
     return (
-      <div>
+      <div className='p-5'>
         <h1 className="text-3xl font-bold text-gray-900 mb-6">Analytics Dashboard</h1>
         
         {/* Technician of the Month */}

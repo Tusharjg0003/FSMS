@@ -119,7 +119,7 @@ export default function DashboardPage() {
     switch ((session.user as any).role) {
       case 'ADMIN':
         return (
-          <div>
+          <div className='p-5'>
             {/* Hero Section */}
             <div className="relative bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 rounded-2xl p-8 mb-8 text-white overflow-hidden">
               <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-32 translate-x-32"></div>

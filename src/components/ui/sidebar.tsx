@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import React, { useState, createContext, useContext } from "react";
 import { AnimatePresence, motion } from "framer-motion"; 
 import { IconMenu2, IconX } from "@tabler/icons-react";
+import { usePathname } from "next/navigation";
 
 interface Links {
   label: string;
@@ -69,11 +70,16 @@ export const Sidebar = ({
   );
 };
 
-export const SidebarBody = (props: React.ComponentProps<typeof motion.div>) => {
+export const SidebarBody = ({
+  navigationLinks,
+  ...props
+}: React.ComponentProps<typeof motion.div> & {
+  navigationLinks?: Links[];
+}) => {
   return (
     <>
       <DesktopSidebar {...props} />
-      <MobileSidebar {...(props as React.ComponentProps<"div">)} />
+      <MobileSidebar navigationLinks={navigationLinks} {...(props as React.ComponentProps<"div">)} />
     </>
   );
 };
@@ -107,49 +113,60 @@ export const DesktopSidebar = ({
 export const MobileSidebar = ({
   className,
   children,
+  navigationLinks = [],
   ...props
-}: React.ComponentProps<"div">) => {
+}: React.ComponentProps<"div"> & {
+  navigationLinks?: Links[];
+}) => {
   const { open, setOpen } = useSidebar();
+  const pathname = usePathname();
+  
+  // Get all navigation items for floating dock
+  const dockItems = navigationLinks.map(link => ({
+    ...link,
+    active: pathname === link.href
+  }));
+
   return (
     <>
-      <div
-        className={cn(
-          "h-15 px-4 py-4 flex flex-row md:hidden items-center justify-between bg-[#CDE0FF] w-full"
-        )}
-        {...props}
-      >
-        <div className="flex justify-end z-20 w-full">
-          <IconMenu2
-            className="text-black"
-            onClick={() => setOpen(!open)}
-          />
+      {/* Floating Dock - Only visible on mobile */}
+      {dockItems.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 md:hidden">
+          <motion.div 
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="bg-white/90 backdrop-blur-md rounded-2xl px-2 py-2 shadow-xl border border-gray-200/50"
+          >
+            <div className="flex items-center space-x-1">
+              {dockItems.map((item, index) => (
+                <motion.a
+                  key={index}
+                  href={item.href}
+                  className={`flex flex-col items-center justify-center p-3 rounded-xl transition-all duration-200 min-w-[60px] ${
+                    item.active 
+                      ? 'bg-blue-500 text-white shadow-lg' 
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  }`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <div className="w-5 h-5 mb-1">
+                    {React.isValidElement(item.icon) 
+                      ? React.cloneElement(item.icon, { 
+                          className: "w-full h-full"
+                        } as any)
+                      : item.icon
+                    }
+                  </div>
+                  <span className="text-xs font-medium text-center leading-tight">
+                    {item.label}
+                  </span>
+                </motion.a>
+              ))}
+            </div>
+          </motion.div>
         </div>
-        <AnimatePresence>
-          {open && (
-            <motion.div
-              initial={{ x: "-100%", opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: "-100%", opacity: 0 }}
-              transition={{
-                duration: 0.3,
-                ease: "easeInOut",
-              }}
-              className={cn(
-                "fixed h-full w-full inset-0 bg-[#CDE0FF]  p-10 z-[100] flex flex-col justify-between",
-                className
-              )}
-            >
-              <div
-                className="absolute right-10 top-10 z-50 text-neutral-800"
-                onClick={() => setOpen(!open)}
-              >
-                <IconX />
-              </div>
-              {children}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+      )}
     </>
   );
 };
