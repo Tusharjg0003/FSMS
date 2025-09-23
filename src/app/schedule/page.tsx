@@ -61,9 +61,16 @@ export default function SchedulePage() {
 
   // Create separate job segments for multi-day jobs
   function createJobSegments() {
+    // Filter out pending/new jobs - only show active or completed jobs
+    const activeJobs = jobs.filter(job => {
+      const status = job.status.toLowerCase();
+      return status !== 'pending' && 
+            status !== 'new' 
+    });
+
     const segments: Array<Job & { segmentDay: Date; segmentStart: Date; segmentEnd: Date; isStart: boolean; isEnd: boolean; isContinuation: boolean }> = [];
     
-    jobs.forEach(job => {
+    activeJobs.forEach(job => {
       const start = new Date(job.startTime);
       const end = job.endTime ? new Date(job.endTime) : new Date(start.getTime() + 60 * 60 * 1000);
       
