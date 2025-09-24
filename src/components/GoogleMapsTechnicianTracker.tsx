@@ -8,6 +8,7 @@ interface TechnicianLocation {
   id: number;
   name: string;
   email: string;
+  isAvailable?: boolean;
   currentLatitude: number;
   currentLongitude: number;
   lastLocationUpdate: string;
@@ -146,7 +147,9 @@ function MapComponent({
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
           scale: 8,
-          fillColor: tech.jobs.length > 0 ? '#10B981' : '#3B82F6', // Green if on job, blue if available
+          fillColor: tech.jobs.length > 0 
+            ? '#10B981' 
+            : (tech.isAvailable === false ? '#9CA3AF' : '#3B82F6'), // gray if unavailable, blue if available
           fillOpacity: 1,
           strokeColor: '#FFFFFF',
           strokeWeight: 2,
@@ -170,7 +173,9 @@ function MapComponent({
               <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: bold;">${tech.name}</h3>
               <p style="margin: 0 0 4px 0; font-size: 12px; color: #666;">${tech.email}</p>
               <p style="margin: 0 0 4px 0; font-size: 12px;">
-                <strong>Status:</strong> ${tech.jobs.length > 0 ? 'On Job' : 'Available'}
+                <strong>Status:</strong> ${tech.jobs.length > 0 
+                  ? 'On Job' 
+                  : (tech.isAvailable === false ? 'Unavailable' : 'Available')}
               </p>
               <p style="margin: 0 0 4px 0; font-size: 12px;">
                 <strong>Last Update:</strong> ${new Date(tech.lastLocationUpdate).toLocaleString()}
@@ -423,6 +428,8 @@ export default function GoogleMapsTechnicianTracker({
                 <div className="text-xs text-gray-800">
                   {tech.jobs.length > 0 ? (
                     <span className="text-green-600 font-medium">On Job ({tech.jobs.length})</span>
+                  ) : tech.isAvailable === false ? (
+                    <span className="text-gray-600 font-medium">Unavailable</span>
                   ) : (
                     <span className="text-blue-600 font-medium">Available</span>
                   )}

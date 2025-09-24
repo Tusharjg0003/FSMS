@@ -42,6 +42,8 @@ model User {
   profilePicture String?
   nationality String?
   dateOfBirth DateTime?
+  // Availability for task assignment
+  isAvailable Boolean @default(true)
   // Location tracking fields
   currentLatitude Float?
   currentLongitude Float?
@@ -107,7 +109,6 @@ model Job {
   locationHistory LocationHistory[] // Add this relation
 }
 
-}
 
 model TechnicianReport {
   id          Int      @id @default(autoincrement())

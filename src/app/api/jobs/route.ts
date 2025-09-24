@@ -212,7 +212,7 @@ export async function POST(request: NextRequest) {
     if (!assignedTechId && autoAssign) {
       // 1) Pull all technicians
       const techs = await prisma.user.findMany({
-        where: { role: { name: 'TECHNICIAN' } },
+        where: { role: { name: 'TECHNICIAN' }, isAvailable: true },
         select: { id: true, name: true },
       });
 
@@ -289,8 +289,18 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // If a technician is provided (or chosen), do a final overlap check
+    // If a technician is provided (or chosen), ensure available and do a final overlap check
     if (assignedTechId) {
+      const tech = await prisma.user.findUnique({
+        where: { id: assignedTechId },
+        select: { id: true, isAvailable: true, role: { select: { name: true } } },
+      });
+      if (!tech || tech.role?.name !== 'TECHNICIAN') {
+        return NextResponse.json({ error: 'Technician not found' }, { status: 404 });
+      }
+      if (!tech.isAvailable) {
+        return NextResponse.json({ error: 'Technician is unavailable' }, { status: 409 });
+      }
       const overlaps = await prisma.job.findMany({
         where: {
           technicianId: assignedTechId,

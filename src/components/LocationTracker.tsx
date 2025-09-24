@@ -73,8 +73,29 @@ export default function LocationTracker({
     }
   };
 
+  // Update technician availability on the server
+  const setAvailability = async (available: boolean) => {
+    try {
+      const response = await fetch('/api/technician/availability', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ available }),
+      });
+      if (!response.ok) {
+        if (response.status === 401) {
+          setError('You are not authorized. Please sign in again.');
+          return;
+        }
+        const errorData = await response.json().catch(() => ({}));
+        setError(errorData.error || 'Failed to update availability');
+      }
+    } catch (err) {
+      setError('Error updating availability');
+    }
+  };
+
   // Stop location tracking
-  function stopTracking() {
+  const stopTracking = async () => {
     if (watchIdRef.current) {
       navigator.geolocation.clearWatch(watchIdRef.current);
       watchIdRef.current = null;
@@ -84,7 +105,10 @@ export default function LocationTracker({
       intervalRef.current = null;
     }
     setIsTracking(false);
-  }
+    await setAvailability(false);
+    setSuccess('Tracking stopped. You are now unavailable for assignment.');
+    setTimeout(() => setSuccess(''), 3000);
+  };
 
   // Update location to server
   const updateLocation = async (location: Location) => {
@@ -97,6 +121,7 @@ export default function LocationTracker({
           ...location,
           jobId: jobId || null,
         }),
+        
       });
 
       if (response.ok) {
@@ -206,6 +231,8 @@ export default function LocationTracker({
       setCurrentLocation(location);
       await updateLocation(location);
       setIsTracking(true);
+      // Mark technician as available when tracking starts
+      await setAvailability(true);
 
       // Set up continuous tracking
       if (autoTrack) {
