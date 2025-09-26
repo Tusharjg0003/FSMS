@@ -7,6 +7,7 @@ import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
 import { motion, AnimatePresence } from 'framer-motion';
 import { IconX, IconUser, IconMapPin, IconClock, IconClipboardList } from '@tabler/icons-react';
+import { get } from 'http';
 
 interface Job {
   id: number;
@@ -14,6 +15,7 @@ interface Job {
   startTime: string;
   endTime?: string;
   location: string;
+  jobTypeName?: string;
   jobType: {
     id: number;
     name: string;
@@ -87,6 +89,12 @@ export default function JobsPage() {
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedJob(null);
+  };
+
+  // Helper function to get the display name for job type
+  const getJobTypeDisplayName = (job: Job): string => {
+    // Always use the historical snapshot if it exists
+    return job.jobTypeName || job.jobType?.name || 'Unknown Job Type';
   };
 
   const getStatusColor = (status: string) => {
@@ -202,61 +210,64 @@ export default function JobsPage() {
                 </div>
               ) : (
                 <ul className="divide-y divide-gray-200">
-                  {jobs.map((job) => (
-                    <li key={job.id}>
-                      <div className="px-4 py-4 sm:px-6">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            <div className="flex-shrink-0">
-                              <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                                <span className="text-blue-600 font-medium">
-                                  {job.jobType.name.charAt(0)}
-                                </span>
+                  {jobs.map((job) => {
+                    const displayName = getJobTypeDisplayName(job);
+                    return (
+                      <li key={job.id}>
+                        <div className="px-4 py-4 sm:px-6">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center">
+                              <div className="flex-shrink-0">
+                                <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                  <span className="text-blue-600 font-medium">
+                                    {displayName.charAt(0)}
+                                  </span> 
+                                </div>
                               </div>
-                            </div>
-                            <div className="ml-4">
-                              <div className="flex items-center">
-                                <p className="text-sm font-medium text-gray-900">
-                                  {job.jobType.name}
-                                </p>
-                                <span
-                                  className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
-                                    job.status
-                                  )}`}
-                                >
-                                  {job.status}
-                                </span>
-                              </div>
-                              <div className="mt-1 flex items-center text-sm text-gray-500">
-                                <p>{job.location}</p>
-                                <span className="mx-2">•</span>
-                                <p>Start: {formatDate(job.startTime)}</p>
-                                {job.endTime && (
-                                  <>
-                                    <span className="mx-2">•</span>
-                                    <p>End: {formatDate(job.endTime)}</p>
-                                  </>
+                              <div className="ml-4">
+                                <div className="flex items-center">
+                                  <p className="text-sm font-medium text-gray-900">
+                                    {displayName}
+                                  </p>
+                                  <span
+                                    className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
+                                      job.status
+                                    )}`}
+                                  >
+                                    {job.status}
+                                  </span>
+                                </div>
+                                <div className="mt-1 flex items-center text-sm text-gray-500">
+                                  <p>{job.location}</p>
+                                  <span className="mx-2">•</span>
+                                  <p>Start: {formatDate(job.startTime)}</p>
+                                  {job.endTime && (
+                                    <>
+                                      <span className="mx-2">•</span>
+                                      <p>End: {formatDate(job.endTime)}</p>
+                                    </>
+                                  )}
+                                </div>
+                                {job.technician && (
+                                  <div className="mt-1 text-sm text-gray-500">
+                                    Assigned to: {job.technician.name}
+                                  </div>
                                 )}
                               </div>
-                              {job.technician && (
-                                <div className="mt-1 text-sm text-gray-500">
-                                  Assigned to: {job.technician.name}
-                                </div>
-                              )}
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <button
+                                onClick={() => handleViewDetails(job)}
+                                className="text-blue-600 hover:text-blue-900 text-sm font-medium"
+                              >
+                                View Details
+                              </button>
                             </div>
                           </div>
-                          <div className="flex items-center space-x-2">
-                            <button
-                              onClick={() => handleViewDetails(job)}
-                              className="text-blue-600 hover:text-blue-900 text-sm font-medium"
-                            >
-                              View Details
-                            </button>
-                          </div>
                         </div>
-                      </div>
-                    </li>
-                  ))}
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </div>
@@ -294,7 +305,7 @@ export default function JobsPage() {
                       <h2 className="text-2xl font-bold text-gray-900">
                         Job #{selectedJob.id}
                       </h2>
-                      <p className="text-gray-600">{selectedJob.jobType?.name}</p>
+                      <p className="text-gray-600">{getJobTypeDisplayName(selectedJob)}</p>
                     </div>
                     <button
                       onClick={closeModal}

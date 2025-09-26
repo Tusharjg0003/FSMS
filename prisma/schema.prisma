@@ -96,6 +96,7 @@ model Job {
   id            Int     @id @default(autoincrement())
   jobTypeId     Int
   jobType       JobType @relation(fields: [jobTypeId], references: [id])
+  jobTypeName   String? // stores name at creation time (optional)
   status        String
   startTime     DateTime
   endTime       DateTime?

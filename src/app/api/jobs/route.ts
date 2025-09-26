@@ -203,6 +203,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'End time must be after start time' }, { status: 400 });
     }
 
+    // Fetch the current job type data to snapshot it
+    const currentJobType = await prisma.jobType.findUnique({
+      where: { id: parseInt(jobTypeId) },
+      select: { id: true, name: true, description: true }
+    });
+
+    if (!currentJobType) {
+      return NextResponse.json({ error: 'Job type not found' }, { status: 404 });
+    }
+
     const { searchParams } = new URL(request.url);
     const autoAssign = searchParams.get('autoAssign') === 'true';
 
@@ -329,10 +339,11 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create the job
+    // Create the job with snapshot
     const job = await prisma.job.create({
       data: {
         jobTypeId: parseInt(jobTypeId),
+        jobTypeName: currentJobType.name, // store current name
         status,
         startTime: start,
         endTime: end,

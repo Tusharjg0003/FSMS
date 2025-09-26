@@ -48,6 +48,7 @@ async function main() {
     await prisma.job.create({
       data: {
         jobTypeId: jobType.id,
+        jobTypeName: jobType.name, // snapshot of name at creation
         status,
         startTime: new Date(Date.now() - Math.floor(Math.random() * 1000000000)),
         endTime: status === 'completed' ? new Date() : null,
@@ -67,6 +68,7 @@ async function main() {
     await prisma.job.create({
       data: {
         jobTypeId: allJobTypes[0].id,
+        jobTypeName: allJobTypes[0].name,
         status: 'completed',
         startTime: new Date(currentYear, currentMonth, Math.floor(Math.random() * 28) + 1),
         endTime: new Date(currentYear, currentMonth, Math.floor(Math.random() * 28) + 1),
@@ -81,6 +83,7 @@ async function main() {
     await prisma.job.create({
       data: {
         jobTypeId: allJobTypes[1].id,
+        jobTypeName: allJobTypes[1].name,
         status: 'completed',
         startTime: new Date(currentYear, currentMonth, Math.floor(Math.random() * 28) + 1),
         endTime: new Date(currentYear, currentMonth, Math.floor(Math.random() * 28) + 1),
