@@ -18,6 +18,7 @@ export default function TechnicianProfilePage() {
     nationality: '',
     dateOfBirth: '',
     password: '',
+    preferredWorkingLocation: '',
   });
 
   useEffect(() => {
@@ -44,6 +45,7 @@ export default function TechnicianProfilePage() {
           nationality: data.nationality || '',
           dateOfBirth: data.dateOfBirth ? data.dateOfBirth.slice(0, 10) : '',
           password: '',
+          preferredWorkingLocation: data.preferredWorkingLocation || '',
         });
       }
     } catch (error) {
@@ -53,7 +55,7 @@ export default function TechnicianProfilePage() {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
@@ -98,6 +100,7 @@ export default function TechnicianProfilePage() {
           nationality: form.nationality,
           dateOfBirth: form.dateOfBirth,
           password: form.password || undefined,
+          preferredWorkingLocation: form.preferredWorkingLocation || undefined,
         }),
       });
       if (res.ok) {
@@ -158,6 +161,12 @@ export default function TechnicianProfilePage() {
                     <div>
                       <label className="block text-sm font-medium text-gray-600 mb-1">Email</label>
                       <p className="text-lg font-medium text-gray-900">{profile?.email}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">Preferred Working Location</label>
+                      <p className="text-lg font-medium text-gray-900">
+                        {profile?.preferredWorkingLocation || 'Not specified'}
+                      </p>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-600 mb-2">Change Profile Picture</label>
@@ -224,6 +233,24 @@ export default function TechnicianProfilePage() {
                                focus:ring-2 focus:ring-blue-500 focus:border-transparent
                                text-gray-900 transition-colors"
                     />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Preferred Working Location
+                    </label>
+                    <select
+                      name="preferredWorkingLocation"
+                      value={form.preferredWorkingLocation}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg 
+                               focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                               text-gray-900 transition-colors"
+                    >
+                      <option value="">Select preferred location</option>
+                      <option value="Subang Jaya">Subang Jaya</option>
+                      <option value="Puchong">Puchong</option>
+                    </select>
                   </div>
                   
                   <div>

@@ -12,6 +12,7 @@ const registerSchema = z.object({
  email: z.string().email('Invalid email address'),
  password: z.string().min(6, 'Password must be at least 6 characters'),
  role: z.enum(['ADMIN', 'SUPERVISOR', 'TECHNICIAN']),
+ preferredWorkingLocation: z.enum(['Subang Jaya', 'Puchong']).optional(),
 });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
@@ -19,15 +20,19 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 export default function RegisterPage() {
  const [isLoading, setIsLoading] = useState(false);
  const [error, setError] = useState('');
+ const [selectedRole, setSelectedRole] = useState('');
  const router = useRouter();
 
  const {
    register,
    handleSubmit,
    formState: { errors },
+   watch,
  } = useForm<RegisterFormData>({
    resolver: zodResolver(registerSchema),
  });
+
+ const watchedRole = watch('role');
 
  const onSubmit = async (data: RegisterFormData) => {
    setIsLoading(true);
@@ -124,7 +129,7 @@ export default function RegisterPage() {
                      {...register('password')}
                      type="password"
                      className="form-input"
-                     placeholder="••••••••"
+                     placeholder="********"
                    />
                    {errors.password && (
                      <p className="field-error">{errors.password.message}</p>
@@ -148,6 +153,25 @@ export default function RegisterPage() {
                      <p className="field-error">{errors.role.message}</p>
                    )}
                  </div>
+
+                 {watchedRole === 'TECHNICIAN' && (
+                   <div className="form-group">
+                     <label htmlFor="preferredWorkingLocation" className="form-label">
+                       Preferred Working Location
+                     </label>
+                     <select
+                       {...register('preferredWorkingLocation')}
+                       className="form-input"
+                     >
+                       <option value="">Select preferred location</option>
+                       <option value="Subang Jaya">Subang Jaya</option>
+                       <option value="Puchong">Puchong</option>
+                     </select>
+                     {errors.preferredWorkingLocation && (
+                       <p className="field-error">{errors.preferredWorkingLocation.message}</p>
+                     )}
+                   </div>
+                 )}
                </div>
 
                <button
