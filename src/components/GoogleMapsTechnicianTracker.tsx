@@ -473,6 +473,10 @@ export default function GoogleMapsTechnicianTracker({
                 <span className="text-gray-700 ml-2">{selectedTechnician.email}</span>
               </div>
               <div>
+                <span className="font-medium text-gray-900">Status:</span> 
+                <span className="text-gray-700 ml-2">{selectedTechnician.isAvailable === false ? 'Off-Job' : 'On-Job'}</span>
+              </div>
+              <div>
                 <span className="font-medium text-gray-900">Current Location:</span>
                 <div className="font-mono text-sm mt-1 text-gray-800">
                   {selectedTechnician.currentLatitude.toFixed(6)}, {selectedTechnician.currentLongitude.toFixed(6)}
