@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
         profilePicture: true,
         nationality: true,
         dateOfBirth: true,
+        preferredWorkingLocation: true,
       },
     });
     if (!user) {
@@ -39,11 +40,12 @@ export async function PATCH(request: NextRequest) {
     if (!session || session.user.role !== 'TECHNICIAN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const { profilePicture, nationality, dateOfBirth, password } = await request.json();
+    const { profilePicture, nationality, dateOfBirth, password, preferredWorkingLocation } = await request.json();
     const updateData: any = {
       profilePicture,
       nationality,
       dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
+      preferredWorkingLocation,
     };
     if (password) {
       updateData.password = await bcrypt.hash(password, 12);
@@ -58,6 +60,7 @@ export async function PATCH(request: NextRequest) {
         profilePicture: true,
         nationality: true,
         dateOfBirth: true,
+        preferredWorkingLocation: true,
       },
     });
     return NextResponse.json(user);

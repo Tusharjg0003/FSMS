@@ -8,11 +8,12 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 const registerSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-  role: z.enum(['ADMIN', 'SUPERVISOR', 'TECHNICIAN']),
-  contactNumber: z.string().optional(),
+ name: z.string().min(2, 'Name must be at least 2 characters'),
+ email: z.string().email('Invalid email address'),
+ password: z.string().min(6, 'Password must be at least 6 characters'),
+ role: z.enum(['ADMIN', 'SUPERVISOR', 'TECHNICIAN']),
+ preferredWorkingLocation: z.enum(['Subang Jaya', 'Puchong']).optional(),
+ contactNumber: z.string().optional(),
 }).refine((data) => {
   if (data.role === 'SUPERVISOR') {
     if (!data.contactNumber) return false;
@@ -30,16 +31,19 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 export default function RegisterPage() {
  const [isLoading, setIsLoading] = useState(false);
  const [error, setError] = useState('');
- const router = useRouter();
  const [selectedRole, setSelectedRole] = useState('');
+ const router = useRouter();
 
  const {
    register,
    handleSubmit,
    formState: { errors },
+   watch,
  } = useForm<RegisterFormData>({
    resolver: zodResolver(registerSchema),
  });
+
+ const watchedRole = watch('role');
 
  const onSubmit = async (data: RegisterFormData) => {
    setIsLoading(true);
@@ -136,7 +140,7 @@ export default function RegisterPage() {
                      {...register('password')}
                      type="password"
                      className="form-input"
-                     placeholder="••••••••"
+                     placeholder="********"
                    />
                    {errors.password && (
                      <p className="field-error">{errors.password.message}</p>
@@ -148,21 +152,38 @@ export default function RegisterPage() {
                      Role
                    </label>
                    <select
-                      {...register('role')}
-                      className="form-input"
-                      onChange={(e) => setSelectedRole(e.target.value)}
-                    >
-                      <option value="">Select a role</option>
-                      <option value="ADMIN">Admin</option>
-                      <option value="SUPERVISOR">Supervisor</option>
-                      <option value="TECHNICIAN">Technician</option>
-                    </select>
-                    {errors.role && (
-                      <p className="field-error">{errors.role.message}</p>
-                    )}
-                  </div>
-
-                  {selectedRole === 'SUPERVISOR' && (
+                     {...register('role')}
+                     className="form-input"
+                     onChange={(e) => setSelectedRole(e.target.value)}
+                   >
+                     <option value="">Select a role</option>
+                     <option value="ADMIN">Admin</option>
+                     <option value="SUPERVISOR">Supervisor</option>
+                     <option value="TECHNICIAN">Technician</option>
+                   </select>
+                   {errors.role && (
+                     <p className="field-error">{errors.role.message}</p>
+                   )}
+                 </div>
+                 {selectedRole === 'TECHNICIAN' && (
+                   <div className="form-group">
+                     <label htmlFor="preferredWorkingLocation" className="form-label">
+                       Preferred Working Location
+                     </label>
+                     <select
+                       {...register('preferredWorkingLocation')}
+                       className="form-input"
+                     >
+                       <option value="">Select preferred location</option>
+                       <option value="Subang Jaya">Subang Jaya</option>
+                       <option value="Puchong">Puchong</option>
+                     </select>
+                     {errors.preferredWorkingLocation && (
+                       <p className="field-error">{errors.preferredWorkingLocation.message}</p>
+                     )}
+                   </div>
+                 )}
+                 {selectedRole === 'SUPERVISOR' && (
                     <div className="form-group">
                       <label htmlFor="contactNumber" className="form-label">
                         Contact Number
@@ -178,7 +199,7 @@ export default function RegisterPage() {
                       )}
                     </div>
                   )}
-                </div>
+               </div>
 
                 <button
                   type="submit"

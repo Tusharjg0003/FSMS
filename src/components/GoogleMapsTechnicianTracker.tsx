@@ -429,9 +429,9 @@ export default function GoogleMapsTechnicianTracker({
                   {tech.jobs.length > 0 ? (
                     <span className="text-green-600 font-medium">On Job ({tech.jobs.length})</span>
                   ) : tech.isAvailable === false ? (
-                    <span className="text-gray-600 font-medium">Unavailable</span>
+                    <span className="text-gray-600 font-medium">Off-Job</span>
                   ) : (
-                    <span className="text-blue-600 font-medium">Available</span>
+                    <span className="text-blue-600 font-medium">On-Job</span>
                   )}
                 </div>
               </div>
@@ -471,6 +471,10 @@ export default function GoogleMapsTechnicianTracker({
               <div>
                 <span className="font-medium text-gray-900">Email:</span> 
                 <span className="text-gray-700 ml-2">{selectedTechnician.email}</span>
+              </div>
+              <div>
+                <span className="font-medium text-gray-900">Status:</span> 
+                <span className="text-gray-700 ml-2">{selectedTechnician.isAvailable === false ? 'Off-Job' : 'On-Job'}</span>
               </div>
               <div>
                 <span className="font-medium text-gray-900">Current Location:</span>

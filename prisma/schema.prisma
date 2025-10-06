@@ -44,6 +44,8 @@ model User {
   dateOfBirth DateTime?
   // Availability for task assignment
   isAvailable Boolean @default(true)
+  // Preferred working location
+  preferredWorkingLocation String?
   // Location tracking fields
   currentLatitude Float?
   currentLongitude Float?
