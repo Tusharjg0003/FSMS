@@ -8,10 +8,21 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 const registerSchema = z.object({
- name: z.string().min(2, 'Name must be at least 2 characters'),
- email: z.string().email('Invalid email address'),
- password: z.string().min(6, 'Password must be at least 6 characters'),
- role: z.enum(['ADMIN', 'SUPERVISOR', 'TECHNICIAN']),
+  name: z.string().min(2, 'Name must be at least 2 characters'),
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  role: z.enum(['ADMIN', 'SUPERVISOR', 'TECHNICIAN']),
+  contactNumber: z.string().optional(),
+}).refine((data) => {
+  if (data.role === 'SUPERVISOR') {
+    if (!data.contactNumber) return false;
+    const digitsOnly = data.contactNumber.replace(/\D/g, '');
+    return /^[0-9+\-\s()]+$/.test(data.contactNumber) && digitsOnly.length >= 10;
+  }
+  return true;
+}, {
+  message: 'Contact number is required for supervisors and must be at least 10 digits',
+  path: ['contactNumber'],
 });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
@@ -20,6 +31,7 @@ export default function RegisterPage() {
  const [isLoading, setIsLoading] = useState(false);
  const [error, setError] = useState('');
  const router = useRouter();
+ const [selectedRole, setSelectedRole] = useState('');
 
  const {
    register,
@@ -136,32 +148,50 @@ export default function RegisterPage() {
                      Role
                    </label>
                    <select
-                     {...register('role')}
-                     className="form-input"
-                   >
-                     <option value="">Select a role</option>
-                     <option value="ADMIN">Admin</option>
-                     <option value="SUPERVISOR">Supervisor</option>
-                     <option value="TECHNICIAN">Technician</option>
-                   </select>
-                   {errors.role && (
-                     <p className="field-error">{errors.role.message}</p>
-                   )}
-                 </div>
-               </div>
+                      {...register('role')}
+                      className="form-input"
+                      onChange={(e) => setSelectedRole(e.target.value)}
+                    >
+                      <option value="">Select a role</option>
+                      <option value="ADMIN">Admin</option>
+                      <option value="SUPERVISOR">Supervisor</option>
+                      <option value="TECHNICIAN">Technician</option>
+                    </select>
+                    {errors.role && (
+                      <p className="field-error">{errors.role.message}</p>
+                    )}
+                  </div>
 
-               <button
-                 type="submit"
-                 disabled={isLoading}
-                 className="submit-button"
-               >
-                 {isLoading ? 'Creating account...' : 'Create account'}
-               </button>
-             </form>
-           </div>
-         </div>
-       </div>
-     </div>
+                  {selectedRole === 'SUPERVISOR' && (
+                    <div className="form-group">
+                      <label htmlFor="contactNumber" className="form-label">
+                        Contact Number
+                      </label>
+                      <input
+                        {...register('contactNumber')}
+                        type="tel"
+                        className="form-input"
+                        placeholder="+60 12-345 6789"
+                      />
+                      {errors.contactNumber && (
+                        <p className="field-error">{errors.contactNumber.message}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="submit-button"
+                >
+                  {isLoading ? 'Creating account...' : 'Create account'}
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
 
      <style jsx>{`
        .register-container {

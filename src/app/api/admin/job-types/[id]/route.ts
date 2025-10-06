@@ -26,16 +26,68 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   }
 }
 
+//soft delete
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await getServerSession(authOptions);
     if (!session || session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    await prisma.jobType.delete({ where: { id: Number(params.id) } });
-    return NextResponse.json({ message: 'Job type deleted' });
+
+    const jobTypeId = Number(params.id);
+
+    //count active jobs 
+    const activeJobsCount = await prisma.job.count({
+      where: { 
+        jobTypeId,
+        status: { in: ['PENDING', 'IN_PROGRESS'] }
+       }
+    });
+
+    // SOFT DELETE - Update JobType with deletedAt timestamp
+    await prisma.jobType.update({
+      where: { id: jobTypeId },
+      data: { deletedAt: new Date() }
+    });
+
+    return NextResponse.json({
+      message: 'Job type deleted successfully',
+      activeJobsCount: activeJobsCount
+    });
+
   } catch (error) {
     console.error('Error deleting job type:', error);
     return NextResponse.json({ error: 'Failed to delete job type' }, { status: 500 });
   }
-} 
+}
+
+// PUT - Restore deleted job type
+export async function PUT(
+  request: NextRequest, 
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || session.user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id } = await params;
+    const jobTypeId = Number(id);
+
+    // Restore by setting deletedAt to null
+    await prisma.jobType.update({
+      where: { id: jobTypeId },
+      data: { deletedAt: null }
+    });
+    
+    return NextResponse.json({ 
+      message: 'Job type restored successfully'
+    });
+  } catch (error) {
+    console.error('Error restoring job type:', error);
+    return NextResponse.json({ 
+      error: 'Failed to restore job type' 
+    }, { status: 500 });
+  }
+}

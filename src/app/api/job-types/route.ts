@@ -5,20 +5,20 @@ import { authOptions } from '../auth/[...nextauth]/route';
 
 const prisma = new PrismaClient();
 
-// GET - Fetch all job types
+// GET - Fetch all job types (except deleted ones)
 export async function GET() {
   try {
-    const jobTypes = await prisma.jobType.findMany({
+    const allJobTypes = await prisma.jobType.findMany({
       orderBy: { name: 'asc' },
     });
-    
-    return NextResponse.json(jobTypes);
+
+    // Filter out deleted ones (for job creation form)
+    const activeJobTypes = allJobTypes.filter(jt => !jt.deletedAt);
+
+    return NextResponse.json(activeJobTypes);
   } catch (error) {
     console.error('Error fetching job types:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch job types' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch job types' }, { status: 500 });
   }
 }
 
