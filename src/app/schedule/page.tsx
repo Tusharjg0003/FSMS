@@ -52,7 +52,13 @@ export default function SchedulePage() {
     if (selectedTechnicians.length > 0) {
       url.searchParams.set('technicianId', selectedTechnicians[0].toString());
     }
-    fetch(url.toString()).then(res => res.json()).then(setJobs);
+    fetch(url.toString())
+    .then(res => res.json())
+    .then(data => setJobs(Array.isArray(data) ? data : []))
+    .catch(err => {
+      console.error('Error fetching jobs:', err);
+      setJobs([]);
+    });
   }, [weekDays, selectedTechnicians]);
 
   function moveWeek(delta: number) {

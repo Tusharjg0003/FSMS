@@ -366,6 +366,7 @@ import { useEffect, useState, useCallback } from 'react';
 import type { ReactNode } from 'react'; // <-- add this for the Overlay prop type
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
+import {  IconEdit, IconTrash } from '@tabler/icons-react';
 
 interface User {
   id: number;
@@ -526,9 +527,17 @@ export default function AdminUsersPage() {
   const getRoleColors = (roleName: string) => {
     switch (roleName.toUpperCase()) {
       case 'ADMIN':
-        return { bg: 'bg-red-100', text: 'text-red-800', border: 'border-red-200' };
+        return {
+          bg: 'bg-orange-100',
+          text: 'text-orange-800',
+          border: 'border-orange-200'
+        };
       case 'SUPERVISOR':
-        return { bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-200' };
+        return {
+          bg: 'bg-teal-100',
+          text: 'text-teal-800',
+          border: 'border-teal-200'
+        };
       case 'TECHNICIAN':
         return { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-200' };
       default:
@@ -536,18 +545,7 @@ export default function AdminUsersPage() {
     }
   };
 
-  const getRowBgColor = (roleName: string) => {
-    switch (roleName.toUpperCase()) {
-      case 'ADMIN':
-        return 'bg-red-50 hover:bg-red-100';
-      case 'SUPERVISOR':
-        return 'bg-orange-50 hover:bg-orange-100';
-      case 'TECHNICIAN':
-        return 'bg-blue-50 hover:bg-blue-100';
-      default:
-        return 'bg-white hover:bg-gray-50';
-    }
-  };
+  
 
   if (status === 'loading' || loading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
@@ -561,11 +559,6 @@ export default function AdminUsersPage() {
           <div className="flex justify-between items-center mb-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">User Management</h1>
-              <div className="flex flex-wrap gap-4 text-sm">
-                <div className="flex items-center gap-2"><div className="w-3 h-3 bg-red-100 border border-red-200 rounded" /><span className="text-gray-600">Admin</span></div>
-                <div className="flex items-center gap-2"><div className="w-3 h-3 bg-orange-100 border border-orange-200 rounded" /><span className="text-gray-600">Supervisor</span></div>
-                <div className="flex items-center gap-2"><div className="w-3 h-3 bg-blue-100 border border-blue-200 rounded" /><span className="text-gray-600">Technician</span></div>
-              </div>
             </div>
             <Link href="/admin/users/create" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
               Add User
@@ -586,11 +579,16 @@ export default function AdminUsersPage() {
                 <tbody className="divide-y divide-gray-200">
                   {users.map((user) => {
                     const roleColors = getRoleColors(user.role?.name || '');
-                    const rowBgColor = getRowBgColor(user.role?.name || '');
+
+                    
                     return (
-                      <tr key={user.id} className={`${rowBgColor} transition-colors`}>
-                        <td className="px-6 py-4 whitespace-nowrap"><div className="text-sm font-medium text-gray-900">{user.name}</div></td>
-                        <td className="px-6 py-4 whitespace-nowrap"><div className="text-sm text-gray-900">{user.email}</div></td>
+                      <tr key={user.id} >
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{user.email}</div>
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${roleColors.bg} ${roleColors.text} ${roleColors.border}`}>
                             {user.role?.name || 'Unknown'}
@@ -598,9 +596,18 @@ export default function AdminUsersPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <div className="flex justify-end gap-2">
-                            <Link href={`/admin/users/${user.id}`} className="text-blue-600 hover:text-blue-900 hover:underline transition-colors">Edit</Link>
-                            <button className="text-red-600 hover:text-red-900 hover:underline transition-colors" onClick={() => handleDelete(user.id)} type="button">
-                              Delete
+                            <Link
+                              href={`/admin/users/${user.id}`}
+                              className="text-blue-600 hover:text-blue-900 hover:underline transition-colors"
+                            >
+                              <IconEdit className="h-5 w-5" />
+                            </Link>
+                            <button
+                              className="text-red-600 hover:text-red-900 hover:underline transition-colors"
+                              onClick={() => handleDelete(user.id)}
+                              type="button"
+                            >
+                              <IconTrash className="h-5 w-5" />
                             </button>
                           </div>
                         </td>

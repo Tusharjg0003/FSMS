@@ -96,6 +96,7 @@ model JobType {
   name        String
   description String?
   jobs        Job[]
+  deletedAt   DateTime?
 }
 
 model Job {

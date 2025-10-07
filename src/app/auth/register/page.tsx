@@ -13,6 +13,17 @@ const registerSchema = z.object({
  password: z.string().min(6, 'Password must be at least 6 characters'),
  role: z.enum(['ADMIN', 'SUPERVISOR', 'TECHNICIAN']),
  preferredWorkingLocation: z.enum(['Subang Jaya', 'Puchong']).optional(),
+ contactNumber: z.string().optional(),
+}).refine((data) => {
+  if (data.role === 'SUPERVISOR') {
+    if (!data.contactNumber) return false;
+    const digitsOnly = data.contactNumber.replace(/\D/g, '');
+    return /^[0-9+\-\s()]+$/.test(data.contactNumber) && digitsOnly.length >= 10;
+  }
+  return true;
+}, {
+  message: 'Contact number is required for supervisors and must be at least 10 digits',
+  path: ['contactNumber'],
 });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
@@ -143,6 +154,7 @@ export default function RegisterPage() {
                    <select
                      {...register('role')}
                      className="form-input"
+                     onChange={(e) => setSelectedRole(e.target.value)}
                    >
                      <option value="">Select a role</option>
                      <option value="ADMIN">Admin</option>
@@ -153,8 +165,7 @@ export default function RegisterPage() {
                      <p className="field-error">{errors.role.message}</p>
                    )}
                  </div>
-
-                 {watchedRole === 'TECHNICIAN' && (
+                 {selectedRole === 'TECHNICIAN' && (
                    <div className="form-group">
                      <label htmlFor="preferredWorkingLocation" className="form-label">
                        Preferred Working Location
@@ -172,20 +183,36 @@ export default function RegisterPage() {
                      )}
                    </div>
                  )}
+                 {selectedRole === 'SUPERVISOR' && (
+                    <div className="form-group">
+                      <label htmlFor="contactNumber" className="form-label">
+                        Contact Number
+                      </label>
+                      <input
+                        {...register('contactNumber')}
+                        type="tel"
+                        className="form-input"
+                        placeholder="+60 12-345 6789"
+                      />
+                      {errors.contactNumber && (
+                        <p className="field-error">{errors.contactNumber.message}</p>
+                      )}
+                    </div>
+                  )}
                </div>
 
-               <button
-                 type="submit"
-                 disabled={isLoading}
-                 className="submit-button"
-               >
-                 {isLoading ? 'Creating account...' : 'Create account'}
-               </button>
-             </form>
-           </div>
-         </div>
-       </div>
-     </div>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="submit-button"
+                >
+                  {isLoading ? 'Creating account...' : 'Create account'}
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
 
      <style jsx>{`
        .register-container {
