@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
 import { motion, AnimatePresence } from 'framer-motion';
-import { IconX, IconUser, IconMapPin, IconClock, IconClipboardList } from '@tabler/icons-react';
+import { IconX, IconUser, IconMapPin, IconClock, IconClipboardList, IconEdit, IconTrash } from '@tabler/icons-react';
 import { get } from 'http';
 
 interface Job {
@@ -37,6 +37,23 @@ export default function JobsPage() {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [modalLoading, setModalLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [deleteConfirmJob, setDeleteConfirmJob] = useState<Job | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Edit Modal State
+const [editJob, setEditJob] = useState<Job | null>(null);
+const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+const [editFormData, setEditFormData] = useState({
+  startTime: '',
+  endTime: '',
+  location: '',
+  status: '',
+  technicianId: '' 
+});
+const [isSaving, setIsSaving] = useState(false);
+const [saveError, setSaveError] = useState('');
+const [technicians, setTechnicians] = useState<Array<{id: number, name: string, email: string, isAvailable: boolean}>>([]);
+
 
 
   useEffect(() => {
@@ -50,6 +67,25 @@ export default function JobsPage() {
       fetchJobs();
     }
   }, [session, filter]);
+
+  useEffect(() => {
+  if (session) {
+    fetchTechnicians();
+  }
+}, [session]);
+
+//for edit technician dropdown
+const fetchTechnicians = async () => {
+  try {
+    const response = await fetch('/api/users?role=TECHNICIAN');
+    if (response.ok) {
+      const data = await response.json();
+      setTechnicians(data);
+    }
+  } catch (error) {
+    console.error('Error fetching technicians:', error);
+  }
+};
 
   const fetchJobs = async () => {
     try {
@@ -89,6 +125,70 @@ export default function JobsPage() {
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedJob(null);
+  };
+
+  const handleEdit = (job: Job, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditJob(job);
+    setEditFormData({
+      startTime: new Date(job.startTime).toISOString().slice(0, 16),
+      endTime: job.endTime ? new Date(job.endTime).toISOString().slice(0, 16) : '',
+      location: job.location,
+      status: job.status,
+      technicianId: job.technician?.id ? String(job.technician.id) : ''
+    });
+    setIsEditModalOpen(true);
+    setSaveError('');
+  };
+
+  const closeEditModal = () => {
+    setIsEditModalOpen(false);
+    setEditJob(null);
+    setSaveError('');
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editJob) return;
+    
+    setIsSaving(true);
+    setSaveError('');
+    
+    try {
+      const payload: any = {
+        startTime: editFormData.startTime ? new Date(editFormData.startTime).toISOString() : undefined,
+        endTime: editFormData.endTime ? new Date(editFormData.endTime).toISOString() : null,
+        location: editFormData.location,
+        status: editFormData.status,
+        technicianId: editFormData.technicianId ? Number(editFormData.technicianId) : null,
+      };
+
+      const response = await fetch(`/api/jobs/${editJob.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.status === 409) {
+        const data = await response.json();
+        setSaveError(data.error || 'Scheduling conflict');
+        return;
+      }
+
+      if (!response.ok) {
+        const data = await response.json();
+        setSaveError(data.error || 'Failed to update job');
+        return;
+      }
+
+      // Success - refresh jobs list
+      await fetchJobs();
+      closeEditModal();
+    } catch (error) {
+      console.error('Error updating job:', error);
+      setSaveError('Failed to update job');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Helper function to get the display name for job type
@@ -134,9 +234,12 @@ export default function JobsPage() {
     return null;
   }
 
+  const canModifyJobs = ['ADMIN', 'SUPERVISOR'].includes(session.user.role);
+
+
   return (
     <DashboardLayout>
-      <div className={`min-h-screen transition-all duration-300 ${isModalOpen ? 'filter blur-md' : ''}`}>
+      <div className={`min-h-screen transition-all duration-300 ${isModalOpen || isEditModalOpen ? 'filter blur-md' : ''}`}>
         <div className="mx-auto py-6 sm:px-6 lg:px-8">
           <div className="px-4 py-6 sm:px-0">
             <div className="flex justify-between items-center mb-6">
@@ -256,6 +359,29 @@ export default function JobsPage() {
                               </div>
                             </div>
                             <div className="flex items-center space-x-2">
+                              {canModifyJobs && (
+                                <>
+                                  <button
+                                    onClick={(e) => handleEdit(job, e)}
+                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                                    title="Edit Job"
+                                  >
+                                    <IconEdit className="h-5 w-5" />
+                                  </button>
+                                  {session.user.role === 'ADMIN' && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        alert('Delete functionality coming soon!');
+                                      }}
+                                      className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                                      title="Delete Job"
+                                    >
+                                      <IconTrash className="h-5 w-5" />
+                                    </button>
+                                  )}
+                                </>
+                              )}
                               <button
                                 onClick={() => handleViewDetails(job)}
                                 className="text-blue-600 hover:text-blue-900 text-sm font-medium"
@@ -431,6 +557,144 @@ export default function JobsPage() {
                   </div>
                 </>
               )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {/* Edit Modal */}
+      <AnimatePresence>
+        {editJob && isEditModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+            onClick={closeEditModal}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="sticky top-0 bg-white rounded-t-2xl border-b border-gray-200 p-6 flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Edit Job</h2>
+                  <p className="text-gray-600">{getJobTypeDisplayName(editJob)}</p>
+                </div>
+                <button
+                  onClick={closeEditModal}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <IconX className="h-6 w-6 text-gray-500" />
+                </button>
+              </div>
+
+              <div className="p-6">
+                {saveError && (
+                  <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                    {saveError}
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Start Time
+                    </label>
+                    <input
+                      type="datetime-local"
+                      value={editFormData.startTime}
+                      onChange={(e) => setEditFormData({ ...editFormData, startTime: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      End Time
+                    </label>
+                    <input
+                      type="datetime-local"
+                      value={editFormData.endTime}
+                      onChange={(e) => setEditFormData({ ...editFormData, endTime: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Location
+                    </label>
+                    <input
+                      type="text"
+                      value={editFormData.location}
+                      onChange={(e) => setEditFormData({ ...editFormData, location: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Status
+                    </label>
+                    <select
+                      value={editFormData.status}
+                      onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-500"
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="in progress">In Progress</option>
+                      <option value="completed">Completed</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Assign Technician
+                    </label>
+                    <select
+                      value={editFormData.technicianId}
+                      onChange={(e) => setEditFormData({ ...editFormData, technicianId: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
+                    >
+                      <option value="">Unassigned</option>
+                      {technicians.map((tech) => (
+                        <option 
+                          key={tech.id} 
+                          value={tech.id}
+                          disabled={tech.isAvailable === false}
+                          className={tech.isAvailable === false ? 'text-gray-400' : ''}
+                        >
+                          {tech.name} ({tech.email}) {tech.isAvailable === false ? '- Off-Job ❌' : '- On-Job ✅'}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="mt-1 text-xs text-gray-500">
+                      Only on-job technicians can be assigned
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-6 flex gap-3">
+                  <button
+                    onClick={closeEditModal}
+                    disabled={isSaving}
+                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveEdit}
+                    disabled={isSaving}
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50"
+                  >
+                    {isSaving ? 'Saving...' : 'Save Changes'}
+                  </button>
+                </div>
+              </div>
             </motion.div>
           </motion.div>
         )}

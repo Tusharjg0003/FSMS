@@ -35,6 +35,7 @@ export async function GET(request: NextRequest) {
         id: true,
         name: true,
         email: true,
+        isAvailable: true,
         role: {
           select: {
             name: true,
