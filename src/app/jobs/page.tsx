@@ -329,16 +329,27 @@ const fetchTechnicians = async () => {
                               </div>
                               <div className="ml-4">
                                 <div className="flex items-center">
-                                  <p className="text-sm font-medium text-gray-900">
-                                    {displayName}
-                                  </p>
-                                  <span
-                                    className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
-                                      job.status
-                                    )}`}
-                                  >
-                                    {job.status}
-                                  </span>
+                                 <div className="flex items-center">
+  <p className="text-sm font-medium text-gray-900">{displayName}</p>
+
+      {/* Status badge */}
+      <span
+        className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
+          job.status
+        )}`}
+      >
+        {job.status}
+      </span>
+
+      {/* 🔴 Red dot indicator for jobs needing reassignment */}
+      {job.needsReassignment && (
+        <span
+          className="ml-2 inline-block w-2 h-2 rounded-full bg-red-500"
+          title="Needs reassignment"
+        ></span>
+      )}
+    </div>
+
                                 </div>
                                 <div className="mt-1 flex items-center text-sm text-gray-500">
                                   <p>{job.location}</p>

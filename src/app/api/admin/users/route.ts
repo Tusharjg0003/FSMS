@@ -41,3 +41,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to create user' }, { status: 500 });
   }
 } 
+
+
+
+// app/api/users/route.ts (example)
+export async function GET() {
+  const users = await prisma.user.findMany({
+    where: { isActive: true },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: { select: { name: true } },
+    },
+    orderBy: { id: 'asc' },
+  });
+  return NextResponse.json(users);
+}
