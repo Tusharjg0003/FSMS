@@ -40,6 +40,12 @@ export async function GET(request: NextRequest) {
             name: true,
           },
         },
+        // Include technician location preferences for admin users
+        preferredWorkingLocation: true,
+        preferredLatitude: true,
+        preferredLongitude: true,
+        preferredRadiusKm: true,
+        isAvailable: true,
       },
       orderBy: { name: 'asc' },
     });

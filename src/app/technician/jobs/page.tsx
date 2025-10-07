@@ -24,8 +24,12 @@ interface Job {
     id: number;
     name: string;
   };
-  clientName?: string;
+  // Customer/Company Information
+  customerName?: string;
+  clientName?: string; // Keep for backward compatibility
   companyName?: string;
+  phoneNumber?: string;
+  email?: string;
   description?: string;
   toolsRequired?: string;
 }
@@ -142,6 +146,23 @@ export default function TechnicianJobsPage() {
                         <MapPin size={12} className="mr-1" />
                         {job.location}
                       </div>
+                      {/* Customer Information */}
+                      {(job.customerName || job.clientName || job.companyName) && (
+                        <div className="mt-2 text-xs text-slate-600">
+                          <div className="flex items-center">
+                            <User size={12} className="mr-1" />
+                            <span className="font-medium">
+                              {job.customerName || job.clientName}
+                              {job.companyName && ` (${job.companyName})`}
+                            </span>
+                          </div>
+                          {job.phoneNumber && (
+                            <div className="flex items-center mt-1">
+                              <span className="text-xs">📞 {job.phoneNumber}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     <Link
@@ -187,14 +208,38 @@ export default function TechnicianJobsPage() {
                     <p className="text-slate-600">{selectedJob.location}</p>
                   </div>
 
-                  {(selectedJob.clientName || selectedJob.companyName) && (
+                  {/* Customer Information */}
+                  {(selectedJob.customerName || selectedJob.clientName || selectedJob.companyName || selectedJob.phoneNumber || selectedJob.email) && (
                     <div>
-                      <label className="block text-lg font-semibold text-slate-900 mb-2">Client:</label>
-                      <p className="text-slate-600">
-                        {selectedJob.clientName && selectedJob.companyName 
-                          ? `${selectedJob.clientName} - ${selectedJob.companyName}`
-                          : selectedJob.clientName || selectedJob.companyName || 'N/A'}
-                      </p>
+                      <label className="block text-lg font-semibold text-slate-900 mb-2">Customer Information:</label>
+                      <div className="bg-slate-50 rounded-lg p-4 space-y-2">
+                        {(selectedJob.customerName || selectedJob.clientName) && (
+                          <div className="flex items-center">
+                            <User size={16} className="mr-2 text-slate-500" />
+                            <span className="text-slate-700 font-medium">
+                              {selectedJob.customerName || selectedJob.clientName}
+                            </span>
+                          </div>
+                        )}
+                        {selectedJob.companyName && (
+                          <div className="flex items-center">
+                            <Building size={16} className="mr-2 text-slate-500" />
+                            <span className="text-slate-700">{selectedJob.companyName}</span>
+                          </div>
+                        )}
+                        {selectedJob.phoneNumber && (
+                          <div className="flex items-center">
+                            <span className="mr-2">📞</span>
+                            <span className="text-slate-700">{selectedJob.phoneNumber}</span>
+                          </div>
+                        )}
+                        {selectedJob.email && (
+                          <div className="flex items-center">
+                            <span className="mr-2">✉️</span>
+                            <span className="text-slate-700">{selectedJob.email}</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
 

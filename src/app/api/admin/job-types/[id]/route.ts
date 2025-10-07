@@ -5,7 +5,7 @@ import { authOptions } from '../../../auth/[...nextauth]/route';
 
 const prisma = new PrismaClient();
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
     if (!session || session.user.role !== 'ADMIN') {
@@ -15,8 +15,9 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     if (!name) {
       return NextResponse.json({ error: 'Job type name is required' }, { status: 400 });
     }
+    const { id } = await params;
     const jobType = await prisma.jobType.update({
-      where: { id: Number(params.id) },
+      where: { id: Number(id) },
       data: { name, description: description || null },
     });
     return NextResponse.json(jobType);
@@ -26,13 +27,14 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
     if (!session || session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    await prisma.jobType.delete({ where: { id: Number(params.id) } });
+    const { id } = await params;
+    await prisma.jobType.delete({ where: { id: Number(id) } });
     return NextResponse.json({ message: 'Job type deleted' });
   } catch (error) {
     console.error('Error deleting job type:', error);

@@ -105,10 +105,16 @@ const TechnicianDashboardLayout: React.FC<TechnicianDashboardLayoutProps> = ({ c
     }
   ];
 
-  const handleSignOut = (e: React.MouseEvent) => {
+  const handleSignOut = async (e: React.MouseEvent) => {
     e.preventDefault();
     setShowProfilePopup(false);
-    signOut({ callbackUrl: '/auth/signin' });
+    try {
+      await signOut({ callbackUrl: '/auth/signin' });
+    } catch (error) {
+      console.error('Sign out error:', error);
+      // Fallback: redirect manually if signOut fails
+      window.location.href = '/auth/signin';
+    }
   };
 
   return (

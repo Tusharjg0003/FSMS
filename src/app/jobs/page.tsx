@@ -16,6 +16,11 @@ interface Job {
   endTime?: string;
   location: string;
   jobTypeName?: string;
+  // Customer/Company Information
+  customerName?: string;
+  companyName?: string;
+  phoneNumber?: string;
+  email?: string;
   jobType: {
     id: number;
     name: string;
@@ -113,12 +118,14 @@ export default function JobsPage() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString('en-MY', {
+      timeZone: 'Asia/Kuala_Lumpur',
       year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
+      hour12: true
     });
   };
 
@@ -248,6 +255,21 @@ export default function JobsPage() {
                                     </>
                                   )}
                                 </div>
+                                {/* Customer Information */}
+                                {(job.customerName || job.companyName) && (
+                                  <div className="mt-1 text-sm text-gray-500">
+                                    <span className="font-medium text-gray-700">
+                                      {job.customerName}
+                                      {job.companyName && ` (${job.companyName})`}
+                                    </span>
+                                    {job.phoneNumber && (
+                                      <>
+                                        <span className="mx-2">•</span>
+                                        <span>{job.phoneNumber}</span>
+                                      </>
+                                    )}
+                                  </div>
+                                )}
                                 {job.technician && (
                                   <div className="mt-1 text-sm text-gray-500">
                                     Assigned to: {job.technician.name}
@@ -351,6 +373,30 @@ export default function JobsPage() {
                               <p className="text-sm text-gray-500">Technician</p>
                               <p className="font-semibold text-gray-900">{selectedJob.technician.name}</p>
                               <p className="text-sm text-gray-600">{selectedJob.technician.email}</p>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Customer Information */}
+                        {(selectedJob.customerName || selectedJob.companyName || selectedJob.phoneNumber || selectedJob.email) && (
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-indigo-100 rounded-lg">
+                              <IconUser className="h-5 w-5 text-indigo-600" />
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-500">Customer</p>
+                              {selectedJob.customerName && (
+                                <p className="font-semibold text-gray-900">{selectedJob.customerName}</p>
+                              )}
+                              {selectedJob.companyName && (
+                                <p className="text-sm text-gray-600">{selectedJob.companyName}</p>
+                              )}
+                              {selectedJob.phoneNumber && (
+                                <p className="text-sm text-gray-600">📞 {selectedJob.phoneNumber}</p>
+                              )}
+                              {selectedJob.email && (
+                                <p className="text-sm text-gray-600">✉️ {selectedJob.email}</p>
+                              )}
                             </div>
                           </div>
                         )}
