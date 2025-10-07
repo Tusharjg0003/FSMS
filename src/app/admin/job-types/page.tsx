@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
+import {  IconEdit, IconTrash, IconRestore } from '@tabler/icons-react';
 
 interface JobType {
   id: number;
@@ -210,13 +211,13 @@ export default function AdminJobTypesPage() {
                           onClick={() => handleEdit(jt)}
                           className="text-blue-600 hover:text-blue-900 mr-4"
                         >
-                          Edit
+                          <IconEdit className="h-5 w-5" />
                         </button>
                         <button
                           onClick={() => handleDelete(jt.id)}
                           className="text-red-600 hover:text-red-900"
                         >
-                          Delete
+                          <IconTrash className="h-5 w-5" />
                         </button>
                       </td>
                     </tr>
@@ -303,7 +304,7 @@ export default function AdminJobTypesPage() {
                               onClick={() => handleRestore(jt.id)}
                               className="text-green-600 bg-white-300 hover:text-green-900"
                             >
-                              Restore
+                              <IconRestore className="h-5 w-5" />
                             </button>
                           </td>
                         </tr>

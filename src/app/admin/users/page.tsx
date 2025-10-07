@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
+import {  IconEdit, IconTrash } from '@tabler/icons-react';
 
 interface User {
   id: number;
@@ -70,15 +71,15 @@ export default function AdminUsersPage() {
     switch (roleUpper) {
       case 'ADMIN':
         return {
-          bg: 'bg-red-100',
-          text: 'text-red-800',
-          border: 'border-red-200'
-        };
-      case 'SUPERVISOR':
-        return {
           bg: 'bg-orange-100',
           text: 'text-orange-800',
           border: 'border-orange-200'
+        };
+      case 'SUPERVISOR':
+        return {
+          bg: 'bg-teal-100',
+          text: 'text-teal-800',
+          border: 'border-teal-200'
         };
       case 'TECHNICIAN':
         return {
@@ -95,20 +96,7 @@ export default function AdminUsersPage() {
     }
   };
 
-  // Get row background color based on role
-  const getRowBgColor = (roleName: string) => {
-    const roleUpper = roleName.toUpperCase();
-    switch (roleUpper) {
-      case 'ADMIN':
-        return 'bg-red-50 hover:bg-red-100';
-      case 'SUPERVISOR':
-        return 'bg-orange-50 hover:bg-orange-100';
-      case 'TECHNICIAN':
-        return 'bg-blue-50 hover:bg-blue-100';
-      default:
-        return 'bg-white hover:bg-gray-50';
-    }
-  };
+  
 
   if (status === 'loading' || loading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
@@ -125,21 +113,6 @@ export default function AdminUsersPage() {
           <div className="flex justify-between items-center mb-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">User Management</h1>
-              {/* Role Legend */}
-              <div className="flex flex-wrap gap-4 text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-red-100 border border-red-200 rounded"></div>
-                  <span className="text-gray-600">Admin</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-orange-100 border border-orange-200 rounded"></div>
-                  <span className="text-gray-600">Supervisor</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-blue-100 border border-blue-200 rounded"></div>
-                  <span className="text-gray-600">Technician</span>
-                </div>
-              </div>
             </div>
             <Link
               href="/admin/users/create"
@@ -171,10 +144,10 @@ export default function AdminUsersPage() {
                 <tbody className="divide-y divide-gray-200">
                   {users.map((user) => {
                     const roleColors = getRoleColors(user.role?.name || '');
-                    const rowBgColor = getRowBgColor(user.role?.name || '');
+
                     
                     return (
-                      <tr key={user.id} className={`${rowBgColor} transition-colors`}>
+                      <tr key={user.id} >
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">{user.name}</div>
                         </td>
@@ -192,14 +165,14 @@ export default function AdminUsersPage() {
                               href={`/admin/users/${user.id}`}
                               className="text-blue-600 hover:text-blue-900 hover:underline transition-colors"
                             >
-                              Edit
+                              <IconEdit className="h-5 w-5" />
                             </Link>
                             <button
                               className="text-red-600 hover:text-red-900 hover:underline transition-colors"
                               onClick={() => handleDelete(user.id)}
                               type="button"
                             >
-                              Delete
+                              <IconTrash className="h-5 w-5" />
                             </button>
                           </div>
                         </td>
