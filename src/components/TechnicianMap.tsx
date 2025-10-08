@@ -114,7 +114,7 @@ export default function TechnicianMap({
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
-  if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPERVISOR') {
+  if ((session?.user as any)?.role !== 'ADMIN' && (session?.user as any)?.role !== 'SUPERVISOR') {
     return null;
   }
 

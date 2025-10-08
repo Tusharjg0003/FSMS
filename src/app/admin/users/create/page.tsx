@@ -27,7 +27,7 @@ export default function CreateUserPage() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/signin');
-    } else if (status === 'authenticated' && session?.user?.role !== 'ADMIN') {
+    } else if (status === 'authenticated' && (session?.user as any)?.role !== 'ADMIN') {
       router.push('/dashboard');
     }
   }, [status, session, router]);
@@ -92,7 +92,7 @@ export default function CreateUserPage() {
   if (status === 'loading') {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
-  if (!session || session.user?.role !== 'ADMIN') {
+  if (!session || (session.user as any)?.role !== 'ADMIN') {
     return null;
   }
 

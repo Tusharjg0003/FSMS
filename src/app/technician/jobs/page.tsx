@@ -44,13 +44,13 @@ export default function TechnicianJobsPage() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/signin');
-    } else if (status === 'authenticated' && session?.user?.role !== 'TECHNICIAN') {
+    } else if (status === 'authenticated' && (session?.user as any)?.role !== 'TECHNICIAN') {
       router.push('/dashboard');
     }
   }, [status, session, router]);
 
   useEffect(() => {
-    if (session?.user?.role === 'TECHNICIAN') {
+    if ((session?.user as any)?.role === 'TECHNICIAN') {
       fetchJobs();
     }
   }, [session]);

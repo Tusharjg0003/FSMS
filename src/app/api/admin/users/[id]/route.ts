@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../../../auth/[...nextauth]/route';
+import { authOptions } from "@/lib/auth";
 import { geocodeAddress, validateMalaysiaCoordinates } from '@/lib/geocoding';
 
 const prisma = new PrismaClient();

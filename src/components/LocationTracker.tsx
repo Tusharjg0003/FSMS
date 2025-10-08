@@ -79,7 +79,7 @@ export default function LocationTracker({
       const response = await fetch('/api/technician/availability', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ available }),
+        body: JSON.stringify({ isAvailable: available }),
       });
       if (!response.ok) {
         if (response.status === 401) {

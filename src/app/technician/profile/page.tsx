@@ -25,7 +25,7 @@ export default function TechnicianProfilePage() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/signin');
-    } else if (status === 'authenticated' && session?.user?.role !== 'TECHNICIAN') {
+    } else if (status === 'authenticated' && (session?.user as any)?.role !== 'TECHNICIAN') {
       router.push('/dashboard');
     }
   }, [status, session, router]);

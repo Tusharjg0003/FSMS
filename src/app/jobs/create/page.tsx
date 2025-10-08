@@ -281,34 +281,23 @@ export default function CreateJobPage() {
             <p className="text-gray-600">Fill out the form below to create a new field service job</p>
           </div>
 
-          {error && (
+          {error && !conflicts.some(c => c.type === 'info') && (
             <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
               {error}
             </div>
           )}
-              {conflicts.length > 0 && (
-                <div className={`border px-4 py-3 rounded ${
-                  conflicts[0]?.type === 'info' 
-                    ? 'bg-blue-50 border-blue-200 text-blue-800' 
-                    : 'bg-yellow-50 border-yellow-200 text-yellow-800'
-                }`}>
-                  {conflicts[0]?.type === 'info' ? (
-                    <div>
-                      <div className="font-semibold mb-2">Auto-assignment Information:</div>
-                      <p>{conflicts[0].message}</p>
-                    </div>
-                  ) : (
-                    <div>
-                      <div className="font-semibold mb-2">Conflicting assignments:</div>
-                      <ul className="list-disc ml-5 space-y-1">
-                        {conflicts.map((c) => (
-                          <li key={c.id}>
-                            #{c.id} - {c.jobType ?? ''} - {new Date(c.startTime).toLocaleString()} - {c.endTime ? new Date(c.endTime).toLocaleString() : 'N/A'} - {c.status}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+              {conflicts.length > 0 && conflicts[0]?.type !== 'info' && (
+                <div className="mb-6 bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg">
+                  <div>
+                    <div className="font-semibold mb-2">Conflicting assignments:</div>
+                    <ul className="list-disc ml-5 space-y-1">
+                      {conflicts.map((c) => (
+                        <li key={c.id}>
+                          #{c.id} - {c.jobType ?? ''} - {new Date(c.startTime).toLocaleString()} - {c.endTime ? new Date(c.endTime).toLocaleString() : 'N/A'} - {c.status}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
               )}
 
@@ -660,6 +649,28 @@ export default function CreateJobPage() {
                     Auto-assign nearest available technician (uses coordinates)
                   </label>
                 </div>
+
+                {/* Auto-assignment failure message */}
+                {error && conflicts.some(c => c.type === 'info') && (
+                  <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                    <div className="flex items-start">
+                      <div className="flex-shrink-0">
+                        <svg className="h-5 w-5 text-orange-400 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <div className="ml-3">
+                        <h3 className="text-sm font-medium text-orange-800">
+                          Auto-assignment Failed
+                        </h3>
+                        <div className="mt-2 text-sm text-orange-700">
+                          <p className="mb-2">{error}</p>
+                          <p className="font-medium">Please manually select a technician from the list above.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 
                 {/* Visualization Link */}
                 {autoAssign && (

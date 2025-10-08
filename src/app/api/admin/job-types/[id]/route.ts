@@ -1,19 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../../../auth/[...nextauth]/route';
+import { authOptions } from "@/lib/auth";
 
 const prisma = new PrismaClient();
 
-<<<<<<< HEAD
 // PATCH - Update job type
-export async function PATCH(
-  request: NextRequest, 
-  { params }: { params: Promise<{ id: string }> } // Change this
-) {
-=======
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
->>>>>>> feature/dynamic-scheduling-and-customer-fields
   try {
     const session = await getServerSession(authOptions);
     if (!session || session.user.role !== 'ADMIN') {
@@ -26,15 +19,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (!name) {
       return NextResponse.json({ error: 'Job type name is required' }, { status: 400 });
     }
-<<<<<<< HEAD
     
     const jobType = await prisma.jobType.update({
-      where: { id: Number(id) }, // Change params.id to id
-=======
-    const { id } = await params;
-    const jobType = await prisma.jobType.update({
       where: { id: Number(id) },
->>>>>>> feature/dynamic-scheduling-and-customer-fields
       data: { name, description: description || null },
     });
     
@@ -45,21 +32,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   }
 }
 
-<<<<<<< HEAD
 // DELETE - Soft delete
-export async function DELETE(
-  request: NextRequest, 
-  { params }: { params: Promise<{ id: string }> } // Change this
-) {
-=======
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
->>>>>>> feature/dynamic-scheduling-and-customer-fields
   try {
     const session = await getServerSession(authOptions);
     if (!session || session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-<<<<<<< HEAD
 
     const { id } = await params; 
     const jobTypeId = Number(id); 
@@ -76,17 +55,12 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     await prisma.jobType.update({
       where: { id: jobTypeId },
       data: { deletedAt: new Date() }
-    });
+    } as any);
 
     return NextResponse.json({
       message: 'Job type deleted successfully',
       activeJobsCount: activeJobsCount
     });
-=======
-    const { id } = await params;
-    await prisma.jobType.delete({ where: { id: Number(id) } });
-    return NextResponse.json({ message: 'Job type deleted' });
->>>>>>> feature/dynamic-scheduling-and-customer-fields
   } catch (error) {
     console.error('Error deleting job type:', error);
     return NextResponse.json({ error: 'Failed to delete job type' }, { status: 500 });
@@ -111,7 +85,7 @@ export async function PUT(
     await prisma.jobType.update({
       where: { id: jobTypeId },
       data: { deletedAt: null }
-    });
+    } as any);
     
     return NextResponse.json({ 
       message: 'Job type restored successfully'

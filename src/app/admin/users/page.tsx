@@ -107,13 +107,13 @@
 //   useEffect(() => {
 //     if (status === 'unauthenticated') {
 //       router.push('/auth/signin');
-//     } else if (status === 'authenticated' && session?.user?.role !== 'ADMIN') {
+//     } else if (status === 'authenticated' && (session?.user as any)?.role !== 'ADMIN') {
 //       router.push('/dashboard');
 //     }
 //   }, [status, session, router]);
 
 //   useEffect(() => {
-//     if (session?.user?.role === 'ADMIN') {
+//     if ((session?.user as any)?.role === 'ADMIN') {
 //       fetchUsers();
 //     }
 //   }, [session]);
@@ -492,6 +492,28 @@ export default function AdminUsersPage() {
     }
   };
 
+  // Refresh users when returning from edit page or when page becomes visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchUsers();
+      }
+    };
+
+    // Also refresh when the page regains focus (useful for navigating back from edit page)
+    const handleFocus = () => {
+      fetchUsers();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
+
   // UPDATED: use ask/show instead of confirm/alert
   const handleDelete = async (id: number) => {
     const user = users.find(u => u.id === id);
@@ -700,7 +722,7 @@ export default function AdminUsersPage() {
                         <label className="block text-sm font-medium text-gray-700">Coordinates</label>
                         <p className="mt-1 text-sm text-gray-900">
                           {selectedUser.preferredLatitude && selectedUser.preferredLongitude
-                            ? `(${selectedUser.preferredLatitude}, ${selectedUser.preferredLongitude})`
+                            ? `${selectedUser.preferredLatitude.toFixed(6)}, ${selectedUser.preferredLongitude.toFixed(6)}`
                             : 'Not set'
                           }
                         </p>
@@ -718,7 +740,7 @@ export default function AdminUsersPage() {
                         <p><strong>Service Coverage:</strong> {selectedUser.preferredRadiusKm || 10} km radius</p>
                         <p><strong>Center Point:</strong> {
                           selectedUser.preferredLatitude && selectedUser.preferredLongitude
-                            ? `${selectedUser.preferredLatitude}, ${selectedUser.preferredLongitude}`
+                            ? `${selectedUser.preferredLatitude.toFixed(6)}, ${selectedUser.preferredLongitude.toFixed(6)}`
                             : 'Not configured'
                         }</p>
                         <p><strong>Availability:</strong> {selectedUser.isAvailable ? 'Active for job assignments' : 'Currently unavailable'}</p>

@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../../../auth/[...nextauth]/route';
+import { authOptions } from "@/lib/auth";
 
 const prisma = new PrismaClient();
 
-export async function PATCH(request: NextRequest, context: { params: { id: string } }) {
-  const params = await context.params;
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const job = await prisma.job.findUnique({ where: { id: Number(params.id) } });
+    const job = await prisma.job.findUnique({ where: { id: Number(id) } });
     if (!job) {
       return NextResponse.json({ error: 'Job not found' }, { status: 404 });
     }
@@ -37,7 +37,7 @@ export async function PATCH(request: NextRequest, context: { params: { id: strin
     }
 
     const updatedJob = await prisma.job.update({
-      where: { id: Number(params.id) },
+      where: { id: Number(id) },
       data: { status: newStatus },
     });
     return NextResponse.json(updatedJob);

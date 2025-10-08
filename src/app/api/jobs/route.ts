@@ -1,7 +1,7 @@
 // import { NextRequest, NextResponse } from 'next/server';
 // import { PrismaClient } from '@prisma/client';
 // import { getServerSession } from 'next-auth';
-// import { authOptions } from '../auth/[...nextauth]/route';
+// import { authOptions } from "@/lib/auth";
 
 // const prisma = new PrismaClient();
 
@@ -121,7 +121,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../auth/[...nextauth]/route';
+import { authOptions } from "@/lib/auth";
 import { autoAssignTechnician } from '@/lib/scheduling';
 import { geocodeAddress, geocodeStructuredAddress, validateMalaysiaCoordinates, StructuredAddress } from '@/lib/geocoding';
 
@@ -262,7 +262,7 @@ export async function POST(request: NextRequest) {
         try {
           geocodingResult = await geocodeStructuredAddress(structuredAddress);
         } catch (error) {
-          console.log(`Structured geocoding failed, falling back to basic:`, error.message);
+          console.log(`Structured geocoding failed, falling back to basic:`, error instanceof Error ? error.message : String(error));
           // Fallback to basic geocoding if structured fails
           const fallbackQuery = [
             address,
@@ -376,14 +376,22 @@ export async function POST(request: NextRequest) {
 
     // Track initial status history
     try {
-      await prisma.jobStatusHistory.create({
-        data: {
-          jobId: job.id,
-          previousStatus: 'created',
-          currentStatus: status,
-          userId: Number(session.user.id),
-        },
+      // Verify the user exists in the database before creating status history
+      const userExists = await prisma.user.findUnique({
+        where: { id: Number(session.user.id) },
+        select: { id: true }
       });
+      
+      if (userExists) {
+        await prisma.jobStatusHistory.create({
+          data: {
+            jobId: job.id,
+            previousStatus: 'created',
+            currentStatus: status,
+            userId: Number(session.user.id),
+          },
+        });
+      }
     } catch (historyError) {
       console.log('Warning: Could not create job status history:', historyError);
       // Continue without status history - job creation is more important

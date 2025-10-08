@@ -303,7 +303,7 @@ export default function GoogleMapsTechnicianTracker({
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [fetchTechnicianLocations]);
 
-  if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPERVISOR') {
+  if ((session?.user as any)?.role !== 'ADMIN' && (session?.user as any)?.role !== 'SUPERVISOR') {
     return null;
   }
 

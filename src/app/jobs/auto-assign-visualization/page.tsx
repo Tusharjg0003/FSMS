@@ -33,6 +33,12 @@ interface JobDetails {
   endTime: string;
   customerName?: string;
   companyName?: string;
+  technicianId?: number;
+  technician?: {
+    id: number;
+    name: string;
+    email: string;
+  };
 }
 
 interface AssignmentStep {
@@ -88,8 +94,16 @@ export default function AutoAssignVisualizationPage() {
           startTime: job.startTime,
           endTime: job.endTime,
           customerName: job.customerName,
-          companyName: job.companyName
+          companyName: job.companyName,
+          technicianId: job.technicianId,
+          technician: job.technician
         });
+
+        // Store assignment info for later use in visualization
+        if (job.technicianId && job.technician) {
+          // Don't set final result immediately - let the visualization show the process
+          // We'll use this info in the assignment logic
+        }
       }
     } catch (error) {
       console.error('Error fetching job details:', error);
@@ -218,36 +232,29 @@ export default function AutoAssignVisualizationPage() {
       const radiusFiltered = techniciansWithDistance.filter(tech => tech.isEligible);
       await updateStepWithTechnicians(3, 'processing', radiusFiltered);
       
-      // Step 4: Check availability windows
+      // Step 4: Check availability windows (for all technicians, but only mark eligible those who passed radius)
       const techniciansWithAvailability = await Promise.all(
-        filteredTechnicians.map(async (tech: any) => {
-          const distance = calculateDistance(
-            jobDetails.jobLatitude,
-            jobDetails.jobLongitude,
-            tech.preferredLatitude,
-            tech.preferredLongitude
-          );
-          
-          const hasRadius = distance <= tech.preferredRadiusKm;
+        techniciansWithDistance.map(async (tech: any) => {
           let hasAvailability = false;
           let availabilityReason = '';
           
-          if (hasRadius) {
-            try {
-              const availabilityRes = await fetch(`/api/technician/availability?userId=${tech.id}&startTime=${jobDetails.startTime}&endTime=${jobDetails.endTime}`);
-              const availability = await availabilityRes.json();
-              hasAvailability = availability.hasAvailability;
-              availabilityReason = availability.hasAvailability ? 'Available during job time' : 'No availability window for this time';
-            } catch (error) {
-              availabilityReason = 'Error checking availability';
-            }
+          // Check availability for ALL technicians (for display purposes)
+          try {
+            const availabilityRes = await fetch(`/api/technician/availability?userId=${tech.id}&startTime=${jobDetails.startTime}&endTime=${jobDetails.endTime}`);
+            const availability = await availabilityRes.json();
+            hasAvailability = availability.hasAvailability;
+            availabilityReason = availability.hasAvailability ? 'Available during job time' : 'No availability window for this time';
+          } catch (error) {
+            availabilityReason = 'Error checking availability';
           }
+          
+          // Only mark as eligible if they passed radius check AND have availability
+          const isEligible = tech.isEligible && hasAvailability;
           
           return {
             ...tech,
-            distance: Math.round(distance * 100) / 100,
-            isEligible: hasRadius && hasAvailability,
-            reason: !hasRadius ? `Outside service radius (${Math.round(distance * 100) / 100}km > ${tech.preferredRadiusKm}km)` : availabilityReason,
+            isEligible,
+            reason: tech.isEligible ? availabilityReason : tech.reason, // Keep previous reason if already filtered out
             hasAvailability,
             hasTimeConflict: null,
             currentJobsCount: 0
@@ -258,63 +265,43 @@ export default function AutoAssignVisualizationPage() {
       await updateStepWithTechnicians(3, 'completed', techniciansWithAvailability);
       
       const availabilityFiltered = techniciansWithAvailability.filter(tech => tech.isEligible);
-      await updateStepWithTechnicians(4, 'processing', availabilityFiltered);
+      await updateStepWithTechnicians(4, 'processing', techniciansWithAvailability); // Show ALL technicians, not just filtered ones
       
-      // Step 5: Check for time conflicts
+      // Step 5: Check for time conflicts (for all technicians, but only mark eligible those who passed previous checks)
       const techniciansWithConflictCheck = await Promise.all(
-        filteredTechnicians.map(async (tech: any) => {
-          const distance = calculateDistance(
-            jobDetails.jobLatitude,
-            jobDetails.jobLongitude,
-            tech.preferredLatitude,
-            tech.preferredLongitude
-          );
-          
-          const hasRadius = distance <= tech.preferredRadiusKm;
-          let hasAvailability = false;
+        techniciansWithAvailability.map(async (tech: any) => {
           let hasTimeConflict = false;
           let conflictReason = '';
           let currentJobsCount = 0;
           
-          if (hasRadius) {
-            try {
-              // Check availability
-              const availabilityRes = await fetch(`/api/technician/availability?userId=${tech.id}&startTime=${jobDetails.startTime}&endTime=${jobDetails.endTime}`);
-              const availability = await availabilityRes.json();
-              hasAvailability = availability.hasAvailability;
+          // Check conflicts for ALL technicians (for display purposes)
+          try {
+            // Check for conflicts
+            const jobsRes = await fetch(`/api/jobs?technicianId=${tech.id}&status=pending,in_progress`);
+            const jobs = await jobsRes.json();
+            currentJobsCount = jobs.length;
+            
+            hasTimeConflict = jobs.some((job: any) => {
+              const jobStart = new Date(job.startTime);
+              const jobEnd = new Date(job.endTime);
+              const newJobStart = new Date(jobDetails.startTime);
+              const newJobEnd = new Date(jobDetails.endTime);
               
-              if (hasAvailability) {
-                // Check for conflicts
-                const jobsRes = await fetch(`/api/jobs?technicianId=${tech.id}&status=pending,in_progress`);
-                const jobs = await jobsRes.json();
-                currentJobsCount = jobs.length;
-                
-                hasTimeConflict = jobs.some((job: any) => {
-                  const jobStart = new Date(job.startTime);
-                  const jobEnd = new Date(job.endTime);
-                  const newJobStart = new Date(jobDetails.startTime);
-                  const newJobEnd = new Date(jobDetails.endTime);
-                  
-                  return (jobStart < newJobEnd && jobEnd > newJobStart);
-                });
-                
-                conflictReason = hasTimeConflict ? 'Has conflicting job during this time' : 'No time conflicts';
-              } else {
-                conflictReason = 'No availability window for this time';
-              }
-            } catch (error) {
-              conflictReason = 'Error checking conflicts';
-            }
-          } else {
-            conflictReason = `Outside service radius (${Math.round(distance * 100) / 100}km > ${tech.preferredRadiusKm}km)`;
+              return (jobStart < newJobEnd && jobEnd > newJobStart);
+            });
+            
+            conflictReason = hasTimeConflict ? 'Has conflicting job during this time' : 'No time conflicts';
+          } catch (error) {
+            conflictReason = 'Error checking conflicts';
           }
+          
+          // Only mark as eligible if they passed all previous checks AND have no conflicts
+          const isEligible = tech.isEligible && !hasTimeConflict;
           
           return {
             ...tech,
-            distance: Math.round(distance * 100) / 100,
-            isEligible: hasRadius && hasAvailability && !hasTimeConflict,
-            reason: conflictReason,
-            hasAvailability,
+            isEligible,
+            reason: tech.isEligible ? conflictReason : tech.reason, // Keep previous reason if already filtered out
             hasTimeConflict,
             currentJobsCount
           };
@@ -324,16 +311,30 @@ export default function AutoAssignVisualizationPage() {
       await updateStepWithTechnicians(4, 'completed', techniciansWithConflictCheck);
       
       const finalEligible = techniciansWithConflictCheck.filter(tech => tech.isEligible);
-      await updateStepWithTechnicians(5, 'processing', finalEligible);
+      await updateStepWithTechnicians(5, 'processing', techniciansWithConflictCheck); // Show ALL technicians, not just filtered ones
       
-      // Step 6: Select best match
-      if (finalEligible.length === 0) {
+      // Step 6: Select best match or show already assigned
+      let selected: Technician | null = null;
+      let finalMessage = '';
+      let isAlreadyAssigned = false;
+      
+      // Check if job is already assigned
+      if (jobDetails && jobDetails.technicianId) {
+        const assignedTech = techniciansWithConflictCheck.find(tech => tech.id === jobDetails.technicianId);
+        if (assignedTech) {
+          selected = assignedTech;
+          isAlreadyAssigned = true;
+          finalMessage = `Job is already assigned to ${assignedTech.name}`;
+        }
+      }
+      
+      if (!selected && finalEligible.length === 0) {
         setFinalResult({
           success: false,
           message: 'No suitable technician found. All technicians are either outside service radius, unavailable, or have conflicting jobs.'
         });
         await updateStepWithTechnicians(5, 'failed', techniciansWithConflictCheck);
-      } else {
+      } else if (!selected) {
         // Sort by distance, then by workload
         const sorted = finalEligible.sort((a, b) => {
           if (a.distance !== b.distance) {
@@ -342,18 +343,23 @@ export default function AutoAssignVisualizationPage() {
           return a.currentJobsCount - b.currentJobsCount;
         });
         
-        const selected = sorted[0];
-        
-        // Mark the selected technician
+        selected = sorted[0];
+        finalMessage = `Selected ${selected.name} - closest distance (${selected.distance}km) with lowest workload (${selected.currentJobsCount} jobs)`;
+      }
+      
+      if (selected) {
+        // Mark the selected technician and update their eligibility status
         const finalTechsWithSelection = techniciansWithConflictCheck.map(tech => ({
           ...tech,
-          isSelected: tech.id === selected.id
+          isSelected: tech.id === selected.id,
+          isEligible: tech.id === selected.id || tech.isEligible, // Show selected tech as eligible
+          reason: tech.id === selected.id ? 'Selected as best match' : tech.reason
         }));
         
         setFinalResult({
           success: true,
           selectedTechnician: selected,
-          message: `Selected ${selected.name} - closest distance (${selected.distance}km) with lowest workload (${selected.currentJobsCount} jobs)`
+          message: finalMessage
         });
         
         await updateStepWithTechnicians(5, 'completed', finalTechsWithSelection);

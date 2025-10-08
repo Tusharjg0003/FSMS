@@ -14,8 +14,8 @@ export default function TechnicianLocationsPage() {
     if (status === 'unauthenticated') {
       router.push('/auth/signin');
     } else if (status === 'authenticated' && 
-               session?.user?.role !== 'ADMIN' && 
-               session?.user?.role !== 'SUPERVISOR') {
+               (session?.user as any)?.role !== 'ADMIN' && 
+               (session?.user as any)?.role !== 'SUPERVISOR') {
       router.push('/dashboard');
     }
   }, [status, session, router]);
@@ -24,7 +24,7 @@ export default function TechnicianLocationsPage() {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  if (!session || (session.user?.role !== 'ADMIN' && session.user?.role !== 'SUPERVISOR')) {
+  if (!session || ((session.user as any)?.role !== 'ADMIN' && (session.user as any)?.role !== 'SUPERVISOR')) {
     return null;
   }
 

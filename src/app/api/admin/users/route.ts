@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]/route';
-import { geocodeAddress, validateMalaysiaCoordinates } from '../../../lib/geocoding';
+import { authOptions } from '@/lib/auth';
+import { geocodeAddress, validateMalaysiaCoordinates } from '../../../../lib/geocoding';
 
 const prisma = new PrismaClient();
 
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
       const geocodeResult = await geocodeAddress(preferredWorkingLocation);
       
       if (!('error' in geocodeResult)) {
-        const { latitude, longitude } = geocodeResult.coordinates;
+        const { latitude, longitude } = geocodeResult;
         
         if (validateMalaysiaCoordinates(latitude, longitude)) {
           finalLatitude = latitude;
@@ -128,7 +128,6 @@ export async function POST(request: NextRequest) {
 // app/api/users/route.ts (example)
 export async function GET() {
   const users = await prisma.user.findMany({
-    where: { isActive: true },
     select: {
       id: true,
       name: true,

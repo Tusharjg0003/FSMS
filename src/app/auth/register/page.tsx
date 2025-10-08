@@ -13,8 +13,7 @@ const registerSchema = z.object({
  email: z.string().email('Invalid email address'),
  password: z.string().min(6, 'Password must be at least 6 characters'),
  role: z.enum(['ADMIN', 'SUPERVISOR', 'TECHNICIAN']),
-<<<<<<< HEAD
- preferredWorkingLocation: z.enum(['Subang Jaya', 'Puchong']).optional(),
+ preferredWorkingLocation: z.string().optional(),
  contactNumber: z.string().optional(),
 }).refine((data) => {
   if (data.role === 'SUPERVISOR') {
@@ -26,9 +25,6 @@ const registerSchema = z.object({
 }, {
   message: 'Contact number is required for supervisors and must be at least 10 digits',
   path: ['contactNumber'],
-=======
- preferredWorkingLocation: z.string().optional(),
->>>>>>> feature/dynamic-scheduling-and-customer-fields
 });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
