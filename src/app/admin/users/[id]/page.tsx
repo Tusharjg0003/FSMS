@@ -22,6 +22,14 @@ export default function EditUserPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    roleId: '',
+    preferredWorkingLocation: '',
+    preferredRadiusKm: '',
+    isAvailable: false
+  });
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -45,6 +53,15 @@ export default function EditUserPage() {
       if (res.ok) {
         const data = await res.json();
         setUser(data);
+        // Update form data with user's current values
+        setFormData({
+          name: data.name || '',
+          email: data.email || '',
+          roleId: data.roleId?.toString() || '',
+          preferredWorkingLocation: data.preferredWorkingLocation || '',
+          preferredRadiusKm: data.preferredRadiusKm?.toString() || '10',
+          isAvailable: data.isAvailable || false
+        });
       } else {
         setError('User not found');
       }
@@ -67,32 +84,34 @@ export default function EditUserPage() {
     }
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    const formData = new FormData(e.currentTarget);
+    const formDataFromEvent = new FormData(e.currentTarget);
     const updateData: any = {
-      name: formData.get('name'),
-      email: formData.get('email'),
-      roleId: formData.get('roleId'),
+      name: formData.name,
+      email: formData.email,
+      roleId: Number(formData.roleId),
     };
-    const password = formData.get('password');
+    
+    // Get password from form if provided
+    const password = formDataFromEvent.get('password');
     if (password) updateData.password = password;
     
     // Add technician preferences if user is a technician
     if ((user as any).role?.name === 'TECHNICIAN') {
-      const preferredWorkingLocation = formData.get('preferredWorkingLocation');
-      const preferredLatitude = formData.get('preferredLatitude');
-      const preferredLongitude = formData.get('preferredLongitude');
-      const preferredRadiusKm = formData.get('preferredRadiusKm');
-      const isAvailable = formData.get('isAvailable');
-      
-      if (preferredWorkingLocation) updateData.preferredWorkingLocation = preferredWorkingLocation;
-      if (preferredLatitude) updateData.preferredLatitude = parseFloat(preferredLatitude as string);
-      if (preferredLongitude) updateData.preferredLongitude = parseFloat(preferredLongitude as string);
-      if (preferredRadiusKm) updateData.preferredRadiusKm = parseFloat(preferredRadiusKm as string);
-      if (isAvailable) updateData.isAvailable = true;
+      if (formData.preferredWorkingLocation) updateData.preferredWorkingLocation = formData.preferredWorkingLocation;
+      if (formData.preferredRadiusKm) updateData.preferredRadiusKm = parseFloat(formData.preferredRadiusKm);
+      updateData.isAvailable = formData.isAvailable;
     }
     try {
       const res = await fetch(`/api/admin/users/${userId}`, {
@@ -171,7 +190,8 @@ export default function EditUserPage() {
                       <select 
                         id="preferredWorkingLocation" 
                         name="preferredWorkingLocation" 
-                        defaultValue={user.preferredWorkingLocation || ''} 
+                        value={formData.preferredWorkingLocation} 
+                        onChange={handleInputChange}
                         className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm px-4 py-2"
                       >
                         <option value="">Select preferred location</option>
@@ -192,7 +212,8 @@ export default function EditUserPage() {
                         step="0.1"
                         min="1"
                         max="50"
-                        defaultValue={user.preferredRadiusKm || 10} 
+                        value={formData.preferredRadiusKm} 
+                        onChange={handleInputChange}
                         className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm px-4 py-2" 
                       />
                     </div>
@@ -224,7 +245,8 @@ export default function EditUserPage() {
                       <input 
                         type="checkbox" 
                         name="isAvailable" 
-                        defaultChecked={user.isAvailable || false}
+                        checked={formData.isAvailable}
+                        onChange={handleInputChange}
                         className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                       />
                       <span className="ml-2 text-sm text-gray-700">Available for job assignments</span>
