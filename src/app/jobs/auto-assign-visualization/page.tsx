@@ -241,11 +241,16 @@ export default function AutoAssignVisualizationPage() {
           // Check availability for ALL technicians (for display purposes)
           try {
             const availabilityRes = await fetch(`/api/technician/availability?userId=${tech.id}&startTime=${jobDetails.startTime}&endTime=${jobDetails.endTime}`);
+            if (!availabilityRes.ok) {
+              throw new Error(`HTTP ${availabilityRes.status}: ${availabilityRes.statusText}`);
+            }
             const availability = await availabilityRes.json();
             hasAvailability = availability.hasAvailability;
             availabilityReason = availability.hasAvailability ? 'Available during job time' : 'No availability window for this time';
           } catch (error) {
-            availabilityReason = 'Error checking availability';
+            console.error(`Error checking availability for technician ${tech.id}:`, error);
+            hasAvailability = false;
+            availabilityReason = `Error checking availability: ${error instanceof Error ? error.message : 'Unknown error'}`;
           }
           
           // Only mark as eligible if they passed radius check AND have availability
@@ -278,6 +283,9 @@ export default function AutoAssignVisualizationPage() {
           try {
             // Check for conflicts
             const jobsRes = await fetch(`/api/jobs?technicianId=${tech.id}&status=pending,in_progress`);
+            if (!jobsRes.ok) {
+              throw new Error(`HTTP ${jobsRes.status}: ${jobsRes.statusText}`);
+            }
             const jobs = await jobsRes.json();
             currentJobsCount = jobs.length;
             
@@ -292,7 +300,9 @@ export default function AutoAssignVisualizationPage() {
             
             conflictReason = hasTimeConflict ? 'Has conflicting job during this time' : 'No time conflicts';
           } catch (error) {
-            conflictReason = 'Error checking conflicts';
+            console.error(`Error checking conflicts for technician ${tech.id}:`, error);
+            hasTimeConflict = true; // Assume conflict if we can't check
+            conflictReason = `Error checking conflicts: ${error instanceof Error ? error.message : 'Unknown error'}`;
           }
           
           // Only mark as eligible if they passed all previous checks AND have no conflicts
@@ -414,6 +424,21 @@ export default function AutoAssignVisualizationPage() {
     return R * c;
   };
 
+  // Convert UTC time to Malaysia time for display
+  const formatMalaysiaTime = (utcDate: string | Date): string => {
+    const date = new Date(utcDate);
+    // Use proper timezone conversion
+    return date.toLocaleString('en-MY', {
+      timeZone: 'Asia/Kuala_Lumpur',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
   const getStepIcon = (stepStatus: string) => {
     switch (stepStatus) {
       case 'completed':
@@ -481,9 +506,9 @@ export default function AutoAssignVisualizationPage() {
                 <p className="font-medium">{jobDetails.location}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Time</p>
+                <p className="text-sm text-gray-600">Time (Malaysia Time)</p>
                 <p className="font-medium">
-                  {new Date(jobDetails.startTime).toLocaleString()} - {new Date(jobDetails.endTime).toLocaleString()}
+                  {formatMalaysiaTime(jobDetails.startTime)} - {formatMalaysiaTime(jobDetails.endTime)}
                 </p>
               </div>
               <div>

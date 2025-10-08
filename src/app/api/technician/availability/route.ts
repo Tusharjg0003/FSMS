@@ -25,8 +25,8 @@ export async function GET(request: NextRequest) {
     // An availability window covers the job time if:
     // - window starts before or at job start time
     // - window ends after or at job end time
-    const jobStartTime = new Date(startTime).getTime();
-    const jobEndTime = new Date(endTime).getTime();
+    const jobStartTime = new Date(startTime);
+    const jobEndTime = new Date(endTime);
     
     const availabilityWindows = await prisma.technicianAvailabilityWindow.findMany({
       where: {

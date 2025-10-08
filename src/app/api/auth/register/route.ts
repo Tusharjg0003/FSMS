@@ -117,14 +117,15 @@ export async function POST(request: NextRequest) {
         const month = targetDate.getMonth();
         const day = targetDate.getDate();
         
-        // Store Malaysia time directly (8 AM - 8 PM Malaysia Time)
-        const startMalaysia = new Date(year, month, day, 8, 0, 0); // 8 AM Malaysia time
-        const endMalaysia = new Date(year, month, day, 20, 0, 0); // 8 PM Malaysia time
+        // Convert Malaysia time (UTC+8) to actual UTC
+        // 8 AM Malaysia = midnight UTC, 8 PM Malaysia = noon UTC
+        const startUTC = new Date(year, month, day, 0, 0, 0); // 8 AM Malaysia = midnight UTC
+        const endUTC = new Date(year, month, day, 12, 0, 0);   // 8 PM Malaysia = noon UTC
         
         windows.push({
           userId: user.id,
-          startUtc: startMalaysia, // Actually storing Malaysia time
-          endUtc: endMalaysia      // Actually storing Malaysia time
+          startUtc: startUTC, // Now storing actual UTC time
+          endUtc: endUTC      // Now storing actual UTC time
         });
       }
       

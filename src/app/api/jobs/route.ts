@@ -219,8 +219,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const start = new Date(startTime);
-    const end = endTime ? new Date(endTime) : null;
+    // Convert Malaysia time to UTC before storing
+    // datetime-local inputs are in Malaysia time (UTC+8)
+    const startMalaysia = new Date(startTime);
+    const endMalaysia = endTime ? new Date(endTime) : null;
+    
+    // Convert to UTC by subtracting 8 hours
+    const start = new Date(startMalaysia.getTime() - (8 * 60 * 60 * 1000));
+    const end = endMalaysia ? new Date(endMalaysia.getTime() - (8 * 60 * 60 * 1000)) : null;
     if (end && end <= start) {
       return NextResponse.json({ error: 'End time must be after start time' }, { status: 400 });
     }

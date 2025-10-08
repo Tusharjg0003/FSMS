@@ -98,14 +98,14 @@ export async function POST(request: NextRequest) {
         const date = new Date(today);
         date.setDate(today.getDate() + i);
         
-        // Store Malaysia time directly (8 AM - 8 PM)
-        const startMalaysia = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 8, 0, 0);
-        const endMalaysia = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 20, 0, 0);
+        // Convert Malaysia time (UTC+8) to actual UTC
+        const startUTC = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0); // 8 AM Malaysia = midnight UTC
+        const endUTC = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0);   // 8 PM Malaysia = noon UTC
         
         windows.push({
           userId: user.id,
-          startUtc: startMalaysia, // Actually storing Malaysia time
-          endUtc: endMalaysia      // Actually storing Malaysia time
+          startUtc: startUTC, // Now storing actual UTC time
+          endUtc: endUTC      // Now storing actual UTC time
         });
       }
       

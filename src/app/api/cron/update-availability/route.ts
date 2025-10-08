@@ -38,14 +38,15 @@ export async function POST(request: NextRequest) {
     const day = newDate.getDate();
     
     // Create availability windows for the new day (8 AM - 8 PM Malaysian Time)
-    const startMalaysia = new Date(year, month, day, 8, 0, 0); // 8 AM Malaysia time
-    const endMalaysia = new Date(year, month, day, 20, 0, 0); // 8 PM Malaysia time
+    // Convert Malaysia time (UTC+8) to actual UTC
+    const startUTC = new Date(year, month, day, 0, 0, 0); // 8 AM Malaysia = midnight UTC
+    const endUTC = new Date(year, month, day, 12, 0, 0);   // 8 PM Malaysia = noon UTC
     
     // Create new windows for all technicians
     const newWindows = technicians.map(tech => ({
       userId: tech.id,
-      startUtc: startMalaysia, // Actually storing Malaysia time
-      endUtc: endMalaysia      // Actually storing Malaysia time
+      startUtc: startUTC, // Now storing actual UTC time
+      endUtc: endUTC      // Now storing actual UTC time
     }));
     
     // Calculate the date to remove (oldest day)
@@ -56,16 +57,16 @@ export async function POST(request: NextRequest) {
     const removeMonth = removeDate.getMonth();
     const removeDay = removeDate.getDate();
     
-    const removeStartMalaysia = new Date(removeYear, removeMonth, removeDay, 8, 0, 0);
-    const removeEndMalaysia = new Date(removeYear, removeMonth, removeDay, 20, 0, 0);
+    const removeStartUTC = new Date(removeYear, removeMonth, removeDay, 0, 0, 0);
+    const removeEndUTC = new Date(removeYear, removeMonth, removeDay, 12, 0, 0);
     
     // Remove old windows and add new ones in a transaction
     await prisma.$transaction(async (tx) => {
       // Remove windows for the oldest day
       await tx.technicianAvailabilityWindow.deleteMany({
         where: {
-          startUtc: removeStartMalaysia,
-          endUtc: removeEndMalaysia
+          startUtc: removeStartUTC,
+          endUtc: removeEndUTC
         }
       });
       
@@ -123,14 +124,15 @@ export async function GET(request: NextRequest) {
     const day = newDate.getDate();
     
     // Create availability windows for the new day (8 AM - 8 PM Malaysian Time)
-    const startMalaysia = new Date(year, month, day, 8, 0, 0); // 8 AM Malaysia time
-    const endMalaysia = new Date(year, month, day, 20, 0, 0); // 8 PM Malaysia time
+    // Convert Malaysia time (UTC+8) to actual UTC
+    const startUTC = new Date(year, month, day, 0, 0, 0); // 8 AM Malaysia = midnight UTC
+    const endUTC = new Date(year, month, day, 12, 0, 0);   // 8 PM Malaysia = noon UTC
     
     // Create new windows for all technicians
     const newWindows = technicians.map(tech => ({
       userId: tech.id,
-      startUtc: startMalaysia, // Actually storing Malaysia time
-      endUtc: endMalaysia      // Actually storing Malaysia time
+      startUtc: startUTC, // Now storing actual UTC time
+      endUtc: endUTC      // Now storing actual UTC time
     }));
     
     // Calculate the date to remove (oldest day)
@@ -141,16 +143,16 @@ export async function GET(request: NextRequest) {
     const removeMonth = removeDate.getMonth();
     const removeDay = removeDate.getDate();
     
-    const removeStartMalaysia = new Date(removeYear, removeMonth, removeDay, 8, 0, 0);
-    const removeEndMalaysia = new Date(removeYear, removeMonth, removeDay, 20, 0, 0);
+    const removeStartUTC = new Date(removeYear, removeMonth, removeDay, 0, 0, 0);
+    const removeEndUTC = new Date(removeYear, removeMonth, removeDay, 12, 0, 0);
     
     // Remove old windows and add new ones in a transaction
     await prisma.$transaction(async (tx) => {
       // Remove windows for the oldest day
       await tx.technicianAvailabilityWindow.deleteMany({
         where: {
-          startUtc: removeStartMalaysia,
-          endUtc: removeEndMalaysia
+          startUtc: removeStartUTC,
+          endUtc: removeEndUTC
         }
       });
       
