@@ -372,8 +372,12 @@ interface User {
   id: number;
   name: string;
   email: string;
-<<<<<<< HEAD
   role: { name: string };
+  preferredWorkingLocation?: string;
+  preferredLatitude?: number;
+  preferredLongitude?: number;
+  preferredRadiusKm?: number;
+  isAvailable?: boolean;
 }
 
 function Overlay({ children }: { children: ReactNode }) {
@@ -448,16 +452,6 @@ function useNotice() {
   ) : null;
 
   return { show, NoticeModal };
-=======
-  role: {
-    name: string;
-  };
-  preferredWorkingLocation?: string;
-  preferredLatitude?: number;
-  preferredLongitude?: number;
-  preferredRadiusKm?: number;
-  isAvailable?: boolean;
->>>>>>> feature/dynamic-scheduling-and-customer-fields
 }
 
 export default function AdminUsersPage() {
@@ -500,17 +494,6 @@ export default function AdminUsersPage() {
 
   // UPDATED: use ask/show instead of confirm/alert
   const handleDelete = async (id: number) => {
-<<<<<<< HEAD
-    const ok = await ask('Are you sure you want to delete this user?');
-    if (!ok) return;
-
-    try {
-      const res = await fetch(`/api/admin/users/${id}`, { method: 'DELETE' });
-
-      if (res.ok) {
-        setUsers((prev) => prev.filter((u) => u.id !== id));
-        return;
-=======
     const user = users.find(u => u.id === id);
     const userName = user?.name || 'User';
     const userRole = user?.role?.name || 'user';
@@ -526,37 +509,13 @@ export default function AdminUsersPage() {
         alert(`${userName} deleted successfully!`);
       } else {
         alert(data.error || 'Failed to delete user');
->>>>>>> feature/dynamic-scheduling-and-customer-fields
       }
-
-      const raw = await res.text();
-      let body: any = {};
-      try { body = JSON.parse(raw); } catch {}
-
-      console.log('DELETE /api/admin/users/:id failed', { status: res.status, raw, parsed: body });
-
-      if (res.status === 409) {
-        const incomplete = body?.counts?.incomplete ?? body?.counts?.active ?? 0;
-        show(
-          `Cannot delete technician: ${body?.reason || 'Technician still has incomplete jobs.'}\n` +
-          `Incomplete jobs: ${incomplete}`
-        );
-        return;
-      }
-
-      if (res.status === 400 || res.status === 401) {
-        show(body?.error || `Request not allowed (status ${res.status}).`);
-        return;
-      }
-
-      show(body?.error || body?.message || `Failed to delete user (status ${res.status}).\n${raw || ''}`);
-    } catch {
-      show('Error deleting user');
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      alert('Error deleting user');
     }
   };
 
-<<<<<<< HEAD
-=======
   const handleViewDetails = (user: User) => {
     setSelectedUser(user);
     setShowModal(true);
@@ -568,7 +527,6 @@ export default function AdminUsersPage() {
   };
 
   // Role color mapping function
->>>>>>> feature/dynamic-scheduling-and-customer-fields
   const getRoleColors = (roleName: string) => {
     switch (roleName.toUpperCase()) {
       case 'ADMIN':
@@ -595,14 +553,9 @@ export default function AdminUsersPage() {
   if (status === 'loading' || loading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
-<<<<<<< HEAD
-  if (!session || session.user?.role !== 'ADMIN') return null;
-=======
-
   if (!session || (session.user as any)?.role !== 'ADMIN') {
     return null;
   }
->>>>>>> feature/dynamic-scheduling-and-customer-fields
 
   return (
     <DashboardLayout>
@@ -686,11 +639,6 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
-<<<<<<< HEAD
-      {/* Mount the modals */}
-      {ConfirmModal}
-      {NoticeModal}
-=======
       {/* User Details Modal */}
       {showModal && selectedUser && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
@@ -809,7 +757,6 @@ export default function AdminUsersPage() {
           </div>
         </div>
       )}
->>>>>>> feature/dynamic-scheduling-and-customer-fields
     </DashboardLayout>
   );
 }
