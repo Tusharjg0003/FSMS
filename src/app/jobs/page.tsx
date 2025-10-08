@@ -6,11 +6,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
 import { motion, AnimatePresence } from 'framer-motion';
-<<<<<<< HEAD
-import { IconX, IconUser, IconMapPin, IconClock, IconClipboardList, IconEdit, IconTrash } from '@tabler/icons-react';
-=======
-import { IconX, IconUser, IconMapPin, IconClock, IconClipboardList, IconEye } from '@tabler/icons-react';
->>>>>>> feature/dynamic-scheduling-and-customer-fields
+import { IconX, IconUser, IconMapPin, IconClock, IconClipboardList, IconEdit, IconTrash, IconEye } from '@tabler/icons-react';
 import { get } from 'http';
 
 interface Job {
@@ -48,29 +44,27 @@ export default function JobsPage() {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [modalLoading, setModalLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-<<<<<<< HEAD
   const [deleteConfirmJob, setDeleteConfirmJob] = useState<Job | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Edit Modal State
-const [editJob, setEditJob] = useState<Job | null>(null);
-const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-const [editFormData, setEditFormData] = useState({
-  startTime: '',
-  endTime: '',
-  location: '',
-  status: '',
-  technicianId: '' 
-});
-const [isSaving, setIsSaving] = useState(false);
-const [saveError, setSaveError] = useState('');
-const [technicians, setTechnicians] = useState<Array<{id: number, name: string, email: string, isAvailable: boolean}>>([]);
+  const [editJob, setEditJob] = useState<Job | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    startTime: '',
+    endTime: '',
+    location: '',
+    status: '',
+    technicianId: '' 
+  });
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
+  const [technicians, setTechnicians] = useState<Array<{id: number, name: string, email: string, isAvailable: boolean}>>([]);
 
-=======
+  // Success message and visualization state
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [showVisualizationLink, setShowVisualizationLink] = useState(false);
   const [autoAssignedJobId, setAutoAssignedJobId] = useState<string | null>(null);
->>>>>>> feature/dynamic-scheduling-and-customer-fields
 
 
   useEffect(() => {
@@ -308,7 +302,7 @@ const fetchTechnicians = async () => {
     return null;
   }
 
-  const canModifyJobs = ['ADMIN', 'SUPERVISOR'].includes(session.user.role);
+  const canModifyJobs = ['ADMIN', 'SUPERVISOR'].includes((session.user as any)?.role);
 
 
   return (
@@ -442,7 +436,7 @@ const fetchTechnicians = async () => {
                                   >
                                     {job.status}
                                   </span>
-                                  {/* 🔴 Red dot indicator for jobs needing reassignment */}
+                                  {/* Red dot indicator for jobs needing reassignment */}
                                   {job.needsReassignment && (
                                     <span
                                       className="ml-2 inline-block w-2 h-2 rounded-full bg-red-500"
@@ -496,7 +490,7 @@ const fetchTechnicians = async () => {
                                       <IconEdit className="h-5 w-5" />
                                     </button>
                                   )}
-                                  {session.user.role === 'ADMIN' && (
+                                  {(session.user as any)?.role === 'ADMIN' && (
                                     <button
                                       onClick={(e) => handleDelete(job, e)}
                                       className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
@@ -817,7 +811,7 @@ const fetchTechnicians = async () => {
                           disabled={tech.isAvailable === false}
                           className={tech.isAvailable === false ? 'text-gray-400' : ''}
                         >
-                          {tech.name} ({tech.email}) {tech.isAvailable === false ? '- Off-Job ❌' : '- On-Job ✅'}
+                          {tech.name} ({tech.email}) {tech.isAvailable === false ? '- Off-Job' : '- On-Job'}
                         </option>
                       ))}
                     </select>
