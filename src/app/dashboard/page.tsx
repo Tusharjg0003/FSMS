@@ -17,6 +17,11 @@ type Job = {
   startTime: string;
   endTime?: string;
   location: string;
+  // Customer/Company Information
+  customerName?: string;
+  companyName?: string;
+  phoneNumber?: string;
+  email?: string;
   jobType: {
     id: number;
     name: string;
@@ -82,6 +87,7 @@ export default function DashboardPage() {
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Job Type</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Customer</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Location</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Start</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">End</th>
@@ -94,6 +100,20 @@ export default function DashboardPage() {
                   <tr key={job.id}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{job.jobType?.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{job.status}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <div>
+                        {job.customerName && (
+                          <div className="font-medium">{job.customerName}</div>
+                        )}
+                        {job.companyName && (
+                          <div className="text-gray-600 text-xs">{job.companyName}</div>
+                        )}
+                        {job.phoneNumber && (
+                          <div className="text-gray-500 text-xs">📞 {job.phoneNumber}</div>
+                        )}
+                        {!job.customerName && !job.companyName && !job.phoneNumber && '-'}
+                      </div>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{job.location}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{job.startTime ? new Date(job.startTime).toLocaleString() : ''}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{job.endTime ? new Date(job.endTime).toLocaleString() : ''}</td>

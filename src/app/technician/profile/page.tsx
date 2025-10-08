@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import LocationTracker from '../../../components/LocationTracker';
 import TechnicianDashboardLayout from '@/components/TechnicianDashboardLayout';
+import { MALAYSIAN_CITIES } from '@/lib/malaysian-cities.js';
 
 export default function TechnicianProfilePage() {
   const { data: session, status, update } = useSession();
@@ -104,9 +105,11 @@ export default function TechnicianProfilePage() {
         }),
       });
       if (res.ok) {
-        setSuccess('Profile updated successfully!');
+        const updatedData = await res.json();
+        setSuccess('Profile updated successfully! Coordinates have been automatically assigned.');
         setForm({ ...form, password: '' });
         fetchProfile();
+        setTimeout(() => setSuccess(''), 5000);
       } else {
         const errorData = await res.json();
         setError(errorData.error || 'Failed to update profile');
@@ -248,8 +251,11 @@ export default function TechnicianProfilePage() {
                                text-gray-900 transition-colors"
                     >
                       <option value="">Select preferred location</option>
-                      <option value="Subang Jaya">Subang Jaya</option>
-                      <option value="Puchong">Puchong</option>
+                      {MALAYSIAN_CITIES.map((city, index) => (
+                        <option key={index} value={`${city.city}, ${city.state}`}>
+                          {city.city}, {city.state}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   

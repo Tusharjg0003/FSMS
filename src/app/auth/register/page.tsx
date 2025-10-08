@@ -6,12 +6,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { MALAYSIAN_CITIES, MALAYSIAN_STATES, getAllCityNames } from '@/lib/malaysian-cities.js';
 
 const registerSchema = z.object({
  name: z.string().min(2, 'Name must be at least 2 characters'),
  email: z.string().email('Invalid email address'),
  password: z.string().min(6, 'Password must be at least 6 characters'),
  role: z.enum(['ADMIN', 'SUPERVISOR', 'TECHNICIAN']),
+<<<<<<< HEAD
  preferredWorkingLocation: z.enum(['Subang Jaya', 'Puchong']).optional(),
  contactNumber: z.string().optional(),
 }).refine((data) => {
@@ -24,6 +26,9 @@ const registerSchema = z.object({
 }, {
   message: 'Contact number is required for supervisors and must be at least 10 digits',
   path: ['contactNumber'],
+=======
+ preferredWorkingLocation: z.string().optional(),
+>>>>>>> feature/dynamic-scheduling-and-customer-fields
 });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
@@ -175,8 +180,11 @@ export default function RegisterPage() {
                        className="form-input"
                      >
                        <option value="">Select preferred location</option>
-                       <option value="Subang Jaya">Subang Jaya</option>
-                       <option value="Puchong">Puchong</option>
+                       {MALAYSIAN_CITIES.map((city, index) => (
+                         <option key={index} value={`${city.city}, ${city.state}`}>
+                           {city.city}, {city.state}
+                         </option>
+                       ))}
                      </select>
                      {errors.preferredWorkingLocation && (
                        <p className="field-error">{errors.preferredWorkingLocation.message}</p>

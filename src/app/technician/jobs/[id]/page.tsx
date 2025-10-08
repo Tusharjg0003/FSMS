@@ -28,8 +28,12 @@ interface Job {
   location: string;
   jobType: { id: number; name: string };
   reports?: any[];
-  clientName?: string;
+  // Customer/Company Information
+  customerName?: string;
+  clientName?: string; // Keep for backward compatibility
   companyName?: string;
+  phoneNumber?: string;
+  email?: string;
   description?: string;
   toolsRequired?: string;
 }
@@ -42,6 +46,7 @@ export default function TechnicianJobDetailPage() {
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [statusUpdate, setStatusUpdate] = useState('');
   const [reportNotes, setReportNotes] = useState('');
   const [reportImages, setReportImages] = useState<File[]>([]);
@@ -128,37 +133,63 @@ export default function TechnicianJobDetailPage() {
     e.preventDefault();
     setSubmitting(true);
     setError('');
+    setSuccess('');
+    
+    console.log('Report submission started:', {
+      jobId,
+      hasNotes: !!reportNotes,
+      notesLength: reportNotes.length,
+      imagesCount: reportImages.length,
+      hasSignature: !!signatureData
+    });
+    
     try {
       // Upload images first
       let imageUrls: string[] = [];
       if (reportImages.length > 0) {
+        console.log('Uploading images...');
         const uploads = await Promise.all(reportImages.map(async (file) => {
           const formData = new FormData();
           formData.append('file', file);
           const res = await fetch('/api/upload', { method: 'POST', body: formData });
           if (res.ok) {
             const data = await res.json();
+            console.log('Image uploaded:', data.url);
             return data.url;
           } else {
-            throw new Error('Failed to upload image');
+            const errorData = await res.json();
+            console.error('Image upload failed:', errorData);
+            throw new Error(`Failed to upload image: ${errorData.error || 'Unknown error'}`);
           }
         }));
         imageUrls = uploads;
       }
+      
       // Upload signature if present
       let signatureUrl = '';
       if (signatureData) {
+        console.log('Uploading signature...');
         const blob = await (await fetch(signatureData)).blob();
         const formData = new FormData();
         formData.append('file', new File([blob], `signature-${Date.now()}.png`, { type: 'image/png' }));
         const res = await fetch('/api/upload', { method: 'POST', body: formData });
         if (res.ok) {
           const data = await res.json();
+          console.log('Signature uploaded:', data.url);
           signatureUrl = data.url;
         } else {
-          throw new Error('Failed to upload signature');
+          const errorData = await res.json();
+          console.error('Signature upload failed:', errorData);
+          throw new Error(`Failed to upload signature: ${errorData.error || 'Unknown error'}`);
         }
       }
+      
+      console.log('Submitting report with data:', {
+        notes: reportNotes,
+        images: imageUrls,
+        signature: signatureUrl
+      });
+      
       const res = await fetch(`/api/jobs/${jobId}/report`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -171,11 +202,18 @@ export default function TechnicianJobDetailPage() {
         setSignatureData(null);
         if (signaturePad) signaturePad.clear();
         fetchJob();
+        setError(''); // Clear any previous errors
+        setSuccess('Report submitted successfully!');
+        // Auto-hide success message after 5 seconds
+        setTimeout(() => setSuccess(''), 5000);
       } else {
-        setError('Failed to submit report');
+        const errorData = await res.json();
+        setError(errorData.error || 'Failed to submit report');
+        console.error('Report submission failed:', errorData);
       }
     } catch (error) {
-      setError('Error submitting report');
+      console.error('Report submission error:', error);
+      setError(`Error submitting report: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setSubmitting(false);
     }
@@ -261,16 +299,35 @@ export default function TechnicianJobDetailPage() {
                   </div>
                 </div>
 
-                {(job.clientName || job.companyName) && (
+                {/* Customer Information */}
+                {(job.customerName || job.clientName || job.companyName || job.phoneNumber || job.email) && (
                   <div>
-                    <label className="block text-lg font-semibold text-slate-900 mb-2">Client:</label>
-                    <div className="flex items-center space-x-2 text-slate-600">
-                      <User size={16} />
-                      <p>
-                        {job.clientName && job.companyName 
-                          ? `${job.clientName} - ${job.companyName}`
-                          : job.clientName || job.companyName || 'N/A'}
-                      </p>
+                    <label className="block text-lg font-semibold text-slate-900 mb-2">Customer Information:</label>
+                    <div className="bg-slate-50 rounded-lg p-4 space-y-3">
+                      {(job.customerName || job.clientName) && (
+                        <div className="flex items-center space-x-2 text-slate-700">
+                          <User size={16} />
+                          <span className="font-medium">{job.customerName || job.clientName}</span>
+                        </div>
+                      )}
+                      {job.companyName && (
+                        <div className="flex items-center space-x-2 text-slate-700">
+                          <Building size={16} />
+                          <span>{job.companyName}</span>
+                        </div>
+                      )}
+                      {job.phoneNumber && (
+                        <div className="flex items-center space-x-2 text-slate-700">
+                          <span>📞</span>
+                          <span>{job.phoneNumber}</span>
+                        </div>
+                      )}
+                      {job.email && (
+                        <div className="flex items-center space-x-2 text-slate-700">
+                          <span>✉️</span>
+                          <span>{job.email}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -428,6 +485,26 @@ export default function TechnicianJobDetailPage() {
                     <span>{submitting ? 'Submitting...' : 'Submit Report'}</span>
                   </button>
                 </div>
+                
+                {/* Success Message */}
+                {success && (
+                  <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-center">
+                      <Check className="h-5 w-5 text-green-600 mr-2" />
+                      <p className="text-green-800 font-medium">{success}</p>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Error Message */}
+                {error && (
+                  <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <div className="flex items-center">
+                      <X className="h-5 w-5 text-red-600 mr-2" />
+                      <p className="text-red-800">{error}</p>
+                    </div>
+                  </div>
+                )}
               </form>
             </div>
           </div>

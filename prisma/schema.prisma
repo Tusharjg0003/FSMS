@@ -46,15 +46,26 @@ model User {
   isAvailable Boolean @default(true)
   // Preferred working location
   preferredWorkingLocation String?
+  // Preferred service area center and radius (km)
+  preferredLatitude Float?
+  preferredLongitude Float?
+  preferredRadiusKm Float?
+  // Optional timezone for interpreting availability windows if needed later
+  timezone String?
   // Location tracking fields
   currentLatitude Float?
   currentLongitude Float?
   lastLocationUpdate DateTime?
   locationHistory LocationHistory[]
+<<<<<<< HEAD
 
     // --- Added for soft-delete / audit ---
   isActive  Boolean  @default(true)
   deletedAt DateTime?
+=======
+  // Absolute availability windows
+  availabilityWindows TechnicianAvailabilityWindow[]
+>>>>>>> feature/dynamic-scheduling-and-customer-fields
 }
 
 model Session {
@@ -108,6 +119,14 @@ model Job {
   startTime     DateTime
   endTime       DateTime?
   location      String
+  // Customer/Company Information
+  customerName  String?
+  companyName   String?
+  phoneNumber   String?
+  email         String?
+  // Geocoded coordinates for matching; derived from location once
+  jobLatitude   Float?
+  jobLongitude  Float?
   technicianId  Int?
   technician    User?   @relation("TechnicianJobs", fields: [technicianId], references: [id])
   reports       TechnicianReport[]
@@ -160,4 +179,14 @@ model LocationHistory {
   heading   Float?   // Direction in degrees
   jobId     Int?     // Associated job if any
   job       Job?     @relation(fields: [jobId], references: [id])
+}
+
+// Absolute availability windows (UTC)
+model TechnicianAvailabilityWindow {
+  id       Int      @id @default(autoincrement())
+  userId   Int
+  user     User     @relation(fields: [userId], references: [id])
+  startUtc DateTime
+  endUtc   DateTime
+  @@index([userId, startUtc, endUtc])
 }

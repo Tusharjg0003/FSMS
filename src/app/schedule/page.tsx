@@ -12,6 +12,12 @@ type Job = {
   location: string;
   jobType: { id: number; name: string };
   technician?: { id: number; name: string; email: string };
+  // Customer/Company Information
+  customerName?: string;
+  clientName?: string; // Keep for backward compatibility
+  companyName?: string;
+  phoneNumber?: string;
+  email?: string;
 };
 
 type Technician = {
@@ -67,11 +73,11 @@ export default function SchedulePage() {
 
   // Create separate job segments for multi-day jobs
   function createJobSegments() {
-    // Filter out pending/new jobs - only show active or completed jobs
+    // Show all jobs including pending ones - they are scheduled jobs too!
     const activeJobs = jobs.filter(job => {
       const status = job.status.toLowerCase();
-      return status !== 'pending' && 
-            status !== 'new' 
+      // Show all jobs except cancelled ones
+      return status !== 'cancelled';
     });
 
     const segments: Array<Job & { segmentDay: Date; segmentStart: Date; segmentEnd: Date; isStart: boolean; isEnd: boolean; isContinuation: boolean }> = [];
@@ -243,7 +249,18 @@ export default function SchedulePage() {
                     <div key={`${segment.id}-${format(day, 'yyyy-MM-dd')}-${index}`} style={jobSegmentStyle(segment)}>
                       <div className="font-semibold truncate">{jobTitle}</div>
                       <div className="truncate">{segment.technician?.name ?? 'Unassigned'}</div>
-                      <div className="truncate">{timeText}</div>
+                      <div className="truncate text-xs">{timeText}</div>
+                      {/* Customer Information */}
+                      {(segment.customerName || segment.clientName) && (
+                        <div className="truncate text-xs opacity-90">
+                          👤 {segment.customerName || segment.clientName}
+                        </div>
+                      )}
+                      {segment.phoneNumber && (
+                        <div className="truncate text-xs opacity-75">
+                          📞 {segment.phoneNumber}
+                        </div>
+                      )}
                     </div>
                   );
                 })}

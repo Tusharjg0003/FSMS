@@ -13,6 +13,12 @@ interface Job {
   endTime?: string;
   location: string;
   jobType: { id: number; name: string };
+  // Customer/Company Information
+  customerName?: string;
+  clientName?: string; // Keep for backward compatibility
+  companyName?: string;
+  phoneNumber?: string;
+  email?: string;
 }
 
 export default function TechnicianDashboard() {
@@ -216,11 +222,25 @@ export default function TechnicianDashboard() {
                 {getJobsForDate(selectedDate).length > 0 ? (
                   <div className="space-y-2">
                     {getJobsForDate(selectedDate).slice(0, 3).map((job, index) => (
-                      <div key={index} className="flex items-center justify-between text-sm bg-white/5 rounded px-2 py-1">
-                        <span className="truncate flex-1">{job.jobType.name}</span>
-                        <span className={`px-2 py-0.5 rounded-full text-xs ${getStatusColor(job.status)} text-white ml-2`}>
-                          {job.status}
-                        </span>
+                      <div key={index} className="bg-white/5 rounded px-2 py-1 space-y-1">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="truncate flex-1">{job.jobType.name}</span>
+                          <span className={`px-2 py-0.5 rounded-full text-xs ${getStatusColor(job.status)} text-white ml-2`}>
+                            {job.status}
+                          </span>
+                        </div>
+                        {/* Customer Information */}
+                        {(job.customerName || job.clientName || job.companyName) && (
+                          <div className="text-xs text-blue-200">
+                            <span>👤 {job.customerName || job.clientName}</span>
+                            {job.companyName && <span> ({job.companyName})</span>}
+                          </div>
+                        )}
+                        {job.phoneNumber && (
+                          <div className="text-xs text-blue-200">
+                            📞 {job.phoneNumber}
+                          </div>
+                        )}
                       </div>
                     ))}
                     {getJobsForDate(selectedDate).length > 3 && (
