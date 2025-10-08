@@ -57,15 +57,11 @@ model User {
   currentLongitude Float?
   lastLocationUpdate DateTime?
   locationHistory LocationHistory[]
-<<<<<<< HEAD
-
-    // --- Added for soft-delete / audit ---
-  isActive  Boolean  @default(true)
-  deletedAt DateTime?
-=======
   // Absolute availability windows
   availabilityWindows TechnicianAvailabilityWindow[]
->>>>>>> feature/dynamic-scheduling-and-customer-fields
+  // --- Added for soft-delete / audit ---
+  isActive  Boolean  @default(true)
+  deletedAt DateTime?
 }
 
 model Session {

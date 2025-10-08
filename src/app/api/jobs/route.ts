@@ -123,7 +123,7 @@ import { PrismaClient } from '@prisma/client';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../auth/[...nextauth]/route';
 import { autoAssignTechnician } from '@/lib/scheduling';
-import { geocodeAddress, geocodeStructuredAddress, geocodeCityState, smartGeocode, validateMalaysiaCoordinates, StructuredAddress } from '@/lib/geocoding';
+import { geocodeAddress, geocodeStructuredAddress, validateMalaysiaCoordinates, StructuredAddress } from '@/lib/geocoding';
 
 const prisma = new PrismaClient();
 
