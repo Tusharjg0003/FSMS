@@ -40,11 +40,27 @@ export default function SchedulePage() {
 
   // Fetch technicians
   useEffect(() => {
-    if (session?.user?.role === 'ADMIN' || session?.user?.role === 'SUPERVISOR') {
+    if ((session?.user as any)?.role === 'ADMIN' || (session?.user as any)?.role === 'SUPERVISOR') {
       fetch('/api/users?role=TECHNICIAN')
-        .then(res => res.json())
-        .then(setTechnicians)
-        .catch(err => console.error('Error fetching technicians:', err));
+        .then(res => {
+          if (!res.ok) {
+            throw new Error('Failed to fetch technicians');
+          }
+          return res.json();
+        })
+        .then(data => {
+          // Ensure data is an array
+          if (Array.isArray(data)) {
+            setTechnicians(data);
+          } else {
+            console.error('Technicians data is not an array:', data);
+            setTechnicians([]);
+          }
+        })
+        .catch(err => {
+          console.error('Error fetching technicians:', err);
+          setTechnicians([]);
+        });
     }
   }, [session]);
 
@@ -169,14 +185,14 @@ export default function SchedulePage() {
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold">Weekly Schedule (24 Hours)</h1>
         <div className="flex items-center gap-2">
-          <button onClick={() => moveWeek(-1)} className="px-3 py-1 border rounded">← Prev</button>
-          <div className="px-2">{format(weekDays[0], 'd MMM')} – {format(weekDays[6], 'd MMM yyyy')}</div>
-          <button onClick={() => moveWeek(1)} className="px-3 py-1 border rounded">Next →</button>
+          <button onClick={() => moveWeek(-1)} className="px-3 py-1 border rounded">Prev</button>
+          <div className="px-2">{format(weekDays[0], 'd MMM')} - {format(weekDays[6], 'd MMM yyyy')}</div>
+          <button onClick={() => moveWeek(1)} className="px-3 py-1 border rounded">Next</button>
         </div>
       </div>
 
       {/* Technician filter section for admins */}
-      {(session?.user?.role === 'ADMIN' || session?.user?.role === 'SUPERVISOR') && (
+      {((session?.user as any)?.role === 'ADMIN' || (session?.user as any)?.role === 'SUPERVISOR') && (
         <div className=" p-6 rounded-2xl shadow-lg mb-6">
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-3 text-white">
@@ -189,7 +205,7 @@ export default function SchedulePage() {
               className="w-full px-4 py-3 bg-blue-100 border-2 border-blue-200 rounded-xl focus:outline-none focus:border-blue-500 transition-colors text-gray-700"
             >
               <option value="">All technicians</option>
-              {technicians.map((technician) => (
+              {Array.isArray(technicians) && technicians.map((technician) => (
                 <option key={technician.id} value={technician.id}>
                   {technician.name} ({technician.email})
                 </option>
@@ -233,16 +249,16 @@ export default function SchedulePage() {
                   
                   if (segment.isStart && segment.isEnd) {
                     // Single day job
-                    timeText = `${format(segment.segmentStart, 'HH:mm')}–${format(segment.segmentEnd, 'HH:mm')}`;
+                    timeText = `${format(segment.segmentStart, 'HH:mm')}-${format(segment.segmentEnd, 'HH:mm')}`;
                   } else if (segment.isStart) {
                     jobTitle += ' (Start)';
-                    timeText = `${format(segment.segmentStart, 'HH:mm')}–23:59`;
+                    timeText = `${format(segment.segmentStart, 'HH:mm')}-23:59`;
                   } else if (segment.isEnd) {
                     jobTitle += ' (End)';
-                    timeText = `00:00–${format(segment.segmentEnd, 'HH:mm')}`;
+                    timeText = `00:00-${format(segment.segmentEnd, 'HH:mm')}`;
                   } else {
                     jobTitle += ' (Cont.)';
-                    timeText = '00:00–23:59';
+                    timeText = '00:00-23:59';
                   }
                   
                   return (
@@ -253,12 +269,12 @@ export default function SchedulePage() {
                       {/* Customer Information */}
                       {(segment.customerName || segment.clientName) && (
                         <div className="truncate text-xs opacity-90">
-                          👤 {segment.customerName || segment.clientName}
+                          Customer: {segment.customerName || segment.clientName}
                         </div>
                       )}
                       {segment.phoneNumber && (
                         <div className="truncate text-xs opacity-75">
-                          📞 {segment.phoneNumber}
+                          Phone: {segment.phoneNumber}
                         </div>
                       )}
                     </div>
