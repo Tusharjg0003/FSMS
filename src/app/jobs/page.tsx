@@ -10,6 +10,7 @@ import { IconX, IconUser, IconMapPin, IconClock, IconClipboardList, IconEdit, Ic
 import { get } from 'http';
 
 interface Job {
+  needsReassignment: any;
   id: number;
   status: string;
   startTime: string;
@@ -127,6 +128,7 @@ const fetchTechnicians = async () => {
     setSelectedJob(null);
   };
 
+  //edit job
   const handleEdit = (job: Job, e: React.MouseEvent) => {
     e.stopPropagation();
     setEditJob(job);
@@ -139,6 +141,38 @@ const fetchTechnicians = async () => {
     });
     setIsEditModalOpen(true);
     setSaveError('');
+  };
+
+  //delete job - direct delete
+  const handleDelete = async (job: Job, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDeleteConfirmJob(job);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirmJob) return;
+    
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/jobs/${deleteConfirmJob.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        alert(data.error || 'Failed to delete job');
+        return;
+      }
+
+      // Success - refresh the list and close modal
+      await fetchJobs();
+      setDeleteConfirmJob(null);
+    } catch (error) {
+      console.error('Error deleting job:', error);
+      alert('Failed to delete job');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const closeEditModal = () => {
@@ -329,27 +363,24 @@ const fetchTechnicians = async () => {
                               </div>
                               <div className="ml-4">
                                 <div className="flex items-center">
-                                 <div className="flex items-center">
-  <p className="text-sm font-medium text-gray-900">{displayName}</p>
-
-      {/* Status badge */}
-      <span
-        className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
-          job.status
-        )}`}
-      >
-        {job.status}
-      </span>
-
-      {/* 🔴 Red dot indicator for jobs needing reassignment */}
-      {job.needsReassignment && (
-        <span
-          className="ml-2 inline-block w-2 h-2 rounded-full bg-red-500"
-          title="Needs reassignment"
-        ></span>
-      )}
-    </div>
-
+                                  <p className="text-sm font-medium text-gray-900">
+                                    {displayName}
+                                  </p>
+                                  <span
+                                    className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
+                                      job.status
+                                    )}`}
+                                  >
+                                    {job.status}
+                                  </span>
+                                  {/* 🔴 Red dot indicator for jobs needing reassignment */}
+                                  {job.needsReassignment && (
+                                    <span
+                                      className="ml-2 inline-block w-2 h-2 rounded-full bg-red-500"
+                                      title="Needs reassignment"
+                                    ></span>
+                                  )}
+                                
                                 </div>
                                 <div className="mt-1 flex items-center text-sm text-gray-500">
                                   <p>{job.location}</p>
@@ -372,19 +403,18 @@ const fetchTechnicians = async () => {
                             <div className="flex items-center space-x-2">
                               {canModifyJobs && (
                                 <>
-                                  <button
-                                    onClick={(e) => handleEdit(job, e)}
-                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
-                                    title="Edit Job"
-                                  >
-                                    <IconEdit className="h-5 w-5" />
-                                  </button>
+                                  {job.status.toLowerCase() !== 'completed' && (
+                                    <button
+                                      onClick={(e) => handleEdit(job, e)}
+                                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                                      title="Edit Job"
+                                    >
+                                      <IconEdit className="h-5 w-5" />
+                                    </button>
+                                  )}
                                   {session.user.role === 'ADMIN' && (
                                     <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        alert('Delete functionality coming soon!');
-                                      }}
+                                      onClick={(e) => handleDelete(job, e)}
                                       className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
                                       title="Delete Job"
                                     >
@@ -705,6 +735,56 @@ const fetchTechnicians = async () => {
                     {isSaving ? 'Saving...' : 'Save Changes'}
                   </button>
                 </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {deleteConfirmJob && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+            onClick={() => setDeleteConfirmJob(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-xl font-bold text-gray-900 mb-4">
+                Delete Job
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to delete this job? <strong>This action cannot be undone.</strong>
+                <br /><br />
+                <span className="text-sm">
+                  <strong>Job:</strong> {getJobTypeDisplayName(deleteConfirmJob)}<br />
+                  <strong>Location:</strong> {deleteConfirmJob.location}<br />
+                  <strong>Status:</strong> {deleteConfirmJob.status}
+                </span>
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setDeleteConfirmJob(null)}
+                  disabled={isDeleting}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  disabled={isDeleting}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium disabled:opacity-50"
+                >
+                  {isDeleting ? 'Deleting...' : 'Delete Job'}
+                </button>
               </div>
             </motion.div>
           </motion.div>

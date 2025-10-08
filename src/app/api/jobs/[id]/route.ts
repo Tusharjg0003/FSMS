@@ -120,6 +120,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
 
     if (newTechId) {
+      //check if tech is available (on-job)
+      
+      //check for scheduling conflicts
       const overlaps = await prisma.job.findMany({
         where: {
           id: { not: existing.id },
@@ -163,5 +166,61 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   } catch (e) {
     console.error('Error updating job:', e);
     return NextResponse.json({ error: 'Failed to update job' }, { status: 500 });
+  }
+}
+
+// delete job and all associated data
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const session = await getServerSession(authOptions);
+    
+    // Only ADMIN can delete
+    if (!session || session.user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    if (!id || isNaN(Number(id))) {
+      return NextResponse.json({ error: 'Invalid job ID' }, { status: 400 });
+    }
+
+    const jobId = Number(id);
+
+    // Check if job exists
+    const job = await prisma.job.findUnique({
+      where: { id: jobId },
+    });
+
+    if (!job) {
+      return NextResponse.json({ error: 'Job not found' }, { status: 404 });
+    }
+
+    // Delete everything in one transaction (cascade delete)
+    await prisma.$transaction([
+      // Delete reports
+      prisma.technicianReport.deleteMany({
+        where: { jobId },
+      }),
+      // Delete status history
+      prisma.jobStatusHistory.deleteMany({
+        where: { jobId },
+      }),
+      // Delete location history
+      prisma.locationHistory.deleteMany({
+        where: { jobId },
+      }),
+      // Finally delete the job
+      prisma.job.delete({
+        where: { id: jobId },
+      }),
+    ]);
+
+    return NextResponse.json({ message: 'Job deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting job:', error);
+    return NextResponse.json({ error: 'Failed to delete job' }, { status: 500 });
   }
 }
