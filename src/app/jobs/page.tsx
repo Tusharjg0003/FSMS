@@ -10,6 +10,7 @@ import { IconX, IconUser, IconMapPin, IconClock, IconClipboardList, IconEdit, Ic
 import { get } from 'http';
 
 interface Job {
+  needsReassignment: any;
   id: number;
   status: string;
   startTime: string;
@@ -329,27 +330,24 @@ const fetchTechnicians = async () => {
                               </div>
                               <div className="ml-4">
                                 <div className="flex items-center">
-                                 <div className="flex items-center">
-  <p className="text-sm font-medium text-gray-900">{displayName}</p>
-
-      {/* Status badge */}
-      <span
-        className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
-          job.status
-        )}`}
-      >
-        {job.status}
-      </span>
-
-      {/* 🔴 Red dot indicator for jobs needing reassignment */}
-      {job.needsReassignment && (
-        <span
-          className="ml-2 inline-block w-2 h-2 rounded-full bg-red-500"
-          title="Needs reassignment"
-        ></span>
-      )}
-    </div>
-
+                                  <p className="text-sm font-medium text-gray-900">
+                                    {displayName}
+                                  </p>
+                                  <span
+                                    className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
+                                      job.status
+                                    )}`}
+                                  >
+                                    {job.status}
+                                  </span>
+                                  {/* 🔴 Red dot indicator for jobs needing reassignment */}
+                                  {job.needsReassignment && (
+                                    <span
+                                      className="ml-2 inline-block w-2 h-2 rounded-full bg-red-500"
+                                      title="Needs reassignment"
+                                    ></span>
+                                  )}
+                                
                                 </div>
                                 <div className="mt-1 flex items-center text-sm text-gray-500">
                                   <p>{job.location}</p>
@@ -372,18 +370,19 @@ const fetchTechnicians = async () => {
                             <div className="flex items-center space-x-2">
                               {canModifyJobs && (
                                 <>
-                                  <button
-                                    onClick={(e) => handleEdit(job, e)}
-                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
-                                    title="Edit Job"
-                                  >
-                                    <IconEdit className="h-5 w-5" />
-                                  </button>
+                                  {job.status.toLowerCase() !== 'completed' && (
+                                    <button
+                                      onClick={(e) => handleEdit(job, e)}
+                                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                                      title="Edit Job"
+                                    >
+                                      <IconEdit className="h-5 w-5" />
+                                    </button>
+                                  )}
                                   {session.user.role === 'ADMIN' && (
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        alert('Delete functionality coming soon!');
                                       }}
                                       className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
                                       title="Delete Job"

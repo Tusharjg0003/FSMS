@@ -120,6 +120,24 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
 
     if (newTechId) {
+      //check if tech is available (on-job)
+      if (newTechId) {
+      const technician = await prisma.user.findUnique({
+        where: { id: newTechId },
+        select: { isAvailable: true, name: true }
+      });
+
+      if (!technician) {
+        return NextResponse.json({ error: 'Technician not found' }, { status: 404 });
+      }
+
+      // If technician is off-job (isAvailable = false), don't allow assignment
+      if (technician.isAvailable === false) {
+        return NextResponse.json({ 
+          error: `Cannot assign job to ${technician.name} - technician is currently off-job` 
+        }, { status: 400 });
+      }
+      //check for scheduling conflicts
       const overlaps = await prisma.job.findMany({
         where: {
           id: { not: existing.id },
