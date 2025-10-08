@@ -5,29 +5,45 @@ import { authOptions } from '../../auth/[...nextauth]/route';
 
 const prisma = new PrismaClient();
 
-export async function POST(request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'TECHNICIAN') {
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { available } = await request.json();
-    if (typeof available !== 'boolean') {
-      return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+    const startTime = searchParams.get('startTime');
+    const endTime = searchParams.get('endTime');
+
+    if (!userId || !startTime || !endTime) {
+      return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
     }
 
-    const user = await prisma.user.update({
-      where: { id: Number(session.user.id) },
-      data: { isAvailable: available },
-      select: { id: true, isAvailable: true },
+    // Check if technician has availability during the specified time
+    const availabilityWindows = await prisma.technicianAvailabilityWindow.findMany({
+      where: {
+        userId: parseInt(userId),
+        startUtc: { lte: new Date(startTime) },
+        endUtc: { gte: new Date(endTime) }
+      }
     });
 
-    return NextResponse.json({ success: true, isAvailable: user.isAvailable });
+    const hasAvailability = availabilityWindows.length > 0;
+
+    return NextResponse.json({
+      hasAvailability,
+      availabilityWindows: availabilityWindows.map(window => ({
+        startUtc: window.startUtc,
+        endUtc: window.endUtc
+      }))
+    });
+
   } catch (error) {
-    console.error('Error updating availability:', error);
-    return NextResponse.json({ error: 'Failed to update availability' }, { status: 500 });
+    console.error('Error checking availability:', error);
+    return NextResponse.json({ error: 'Failed to check availability' }, { status: 500 });
+  } finally {
+    await prisma.$disconnect();
   }
 }
-
-

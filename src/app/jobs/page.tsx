@@ -1,12 +1,12 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
 import { motion, AnimatePresence } from 'framer-motion';
-import { IconX, IconUser, IconMapPin, IconClock, IconClipboardList } from '@tabler/icons-react';
+import { IconX, IconUser, IconMapPin, IconClock, IconClipboardList, IconEye } from '@tabler/icons-react';
 import { get } from 'http';
 
 interface Job {
@@ -36,12 +36,16 @@ interface Job {
 export default function JobsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [modalLoading, setModalLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [showVisualizationLink, setShowVisualizationLink] = useState(false);
+  const [autoAssignedJobId, setAutoAssignedJobId] = useState<string | null>(null);
 
 
   useEffect(() => {
@@ -49,6 +53,28 @@ export default function JobsPage() {
       router.push('/auth/signin');
     }
   }, [status, router]);
+
+  // Handle URL parameters for success messages and visualization
+  useEffect(() => {
+    const message = searchParams.get('message');
+    const jobId = searchParams.get('jobId');
+    const autoAssigned = searchParams.get('autoAssigned');
+    
+    if (message) {
+      setSuccessMessage(message);
+      if (autoAssigned === 'true' && jobId) {
+        setShowVisualizationLink(true);
+        setAutoAssignedJobId(jobId);
+      }
+      
+      // Clear message after 5 seconds
+      setTimeout(() => {
+        setSuccessMessage(null);
+        setShowVisualizationLink(false);
+        setAutoAssignedJobId(null);
+      }, 5000);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (session) {
@@ -153,7 +179,7 @@ export default function JobsPage() {
                   Manage and track field service jobs
                 </p>
               </div>
-              {session.user.role === 'ADMIN' && (
+              {(session?.user as any)?.role === 'ADMIN' && (
                 <Link
                   href="/jobs/create"
                   className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
@@ -162,6 +188,35 @@ export default function JobsPage() {
                 </Link>
               )}
             </div>
+
+            {/* Success Message and Visualization Link */}
+            {successMessage && (
+              <div className="mb-6">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3 flex-1">
+                      <p className="text-sm font-medium text-green-800">{successMessage}</p>
+                      {showVisualizationLink && autoAssignedJobId && (
+                        <div className="mt-2">
+                          <Link
+                            href={`/jobs/auto-assign-visualization?jobId=${autoAssignedJobId}`}
+                            className="inline-flex items-center px-3 py-1 border border-green-300 rounded-md text-xs font-medium text-green-700 bg-green-100 hover:bg-green-200 transition-colors"
+                          >
+                            <IconEye className="h-3 w-3 mr-1" />
+                            View Auto-Assignment Process
+                          </Link>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Filters */}
             <div className="mb-6">
@@ -246,11 +301,11 @@ export default function JobsPage() {
                                 </div>
                                 <div className="mt-1 flex items-center text-sm text-gray-500">
                                   <p>{job.location}</p>
-                                  <span className="mx-2">•</span>
+                                  <span className="mx-2">-</span>
                                   <p>Start: {formatDate(job.startTime)}</p>
                                   {job.endTime && (
                                     <>
-                                      <span className="mx-2">•</span>
+                                      <span className="mx-2">-</span>
                                       <p>End: {formatDate(job.endTime)}</p>
                                     </>
                                   )}
@@ -264,7 +319,7 @@ export default function JobsPage() {
                                     </span>
                                     {job.phoneNumber && (
                                       <>
-                                        <span className="mx-2">•</span>
+                                        <span className="mx-2">-</span>
                                         <span>{job.phoneNumber}</span>
                                       </>
                                     )}
@@ -392,10 +447,10 @@ export default function JobsPage() {
                                 <p className="text-sm text-gray-600">{selectedJob.companyName}</p>
                               )}
                               {selectedJob.phoneNumber && (
-                                <p className="text-sm text-gray-600">📞 {selectedJob.phoneNumber}</p>
+                                <p className="text-sm text-gray-600">Phone: {selectedJob.phoneNumber}</p>
                               )}
                               {selectedJob.email && (
-                                <p className="text-sm text-gray-600">✉️ {selectedJob.email}</p>
+                                <p className="text-sm text-gray-600">Email: {selectedJob.email}</p>
                               )}
                             </div>
                           </div>

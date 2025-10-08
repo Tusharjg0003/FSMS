@@ -499,7 +499,11 @@ export default function CreateJobPage() {
           // Disable auto-assign and enable manual selection
           setAutoAssign(false);
         } else {
-          router.push('/jobs?message=Job created successfully');
+          // If auto-assigned, redirect with job ID for potential visualization
+          const redirectUrl = autoAssign 
+            ? `/jobs?message=Job created successfully&jobId=${responseData.id}&autoAssigned=true`
+            : '/jobs?message=Job created successfully';
+          router.push(redirectUrl);
         }
       } else {
         const errorData = await response.json();
@@ -825,7 +829,7 @@ export default function CreateJobPage() {
               <h2 className="text-xl font-bold text-gray-900 mb-6 text-center">Schedule</h2>
               <div className="mb-4 p-3 bg-blue-100 border border-blue-200 rounded-lg">
                 <p className="text-sm text-blue-700">
-                  <strong>📅 Time Zone:</strong> All times are in Malaysia Time (UTC+8). 
+                  <strong>Time Zone:</strong> All times are in Malaysia Time (UTC+8). 
                   Technicians are available from 8:00 AM to 8:00 PM Malaysia Time.
                 </p>
               </div>
@@ -919,6 +923,21 @@ export default function CreateJobPage() {
                     Auto-assign nearest available technician (uses coordinates)
                   </label>
                 </div>
+                
+                {/* Visualization Link */}
+                {autoAssign && (
+                  <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-700 mb-2">
+                      <strong>Want to see how auto-assignment works?</strong>
+                    </p>
+                    <p className="text-xs text-blue-600 mb-3">
+                      After creating the job, you can view a detailed step-by-step breakdown of how the system selects the best technician.
+                    </p>
+                    <div className="text-xs text-blue-600">
+                      <strong>Tip:</strong> The visualization will show distance calculations, availability checks, and conflict detection in real-time.
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
