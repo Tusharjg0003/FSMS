@@ -99,8 +99,8 @@ export async function POST(request: NextRequest) {
         date.setDate(today.getDate() + i);
         
         // Convert Malaysia time (UTC+8) to actual UTC
-        const startUTC = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0); // 8 AM Malaysia = midnight UTC
-        const endUTC = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0);   // 8 PM Malaysia = noon UTC
+        const startUTC = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0)); // 8 AM Malaysia = midnight UTC
+        const endUTC = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0));   // 8 PM Malaysia = noon UTC
         
         windows.push({
           userId: user.id,

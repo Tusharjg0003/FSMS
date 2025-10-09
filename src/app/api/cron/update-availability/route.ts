@@ -39,8 +39,9 @@ export async function POST(request: NextRequest) {
     
     // Create availability windows for the new day (8 AM - 8 PM Malaysian Time)
     // Convert Malaysia time (UTC+8) to actual UTC
-    const startUTC = new Date(year, month, day, 0, 0, 0); // 8 AM Malaysia = midnight UTC
-    const endUTC = new Date(year, month, day, 12, 0, 0);   // 8 PM Malaysia = noon UTC
+    // 8 AM Malaysia = midnight UTC, 8 PM Malaysia = noon UTC
+    const startUTC = new Date(Date.UTC(year, month, day, 0, 0, 0)); // midnight UTC = 8 AM Malaysia
+    const endUTC = new Date(Date.UTC(year, month, day, 12, 0, 0));   // noon UTC = 8 PM Malaysia
     
     // Create new windows for all technicians
     const newWindows = technicians.map(tech => ({
@@ -125,8 +126,9 @@ export async function GET(request: NextRequest) {
     
     // Create availability windows for the new day (8 AM - 8 PM Malaysian Time)
     // Convert Malaysia time (UTC+8) to actual UTC
-    const startUTC = new Date(year, month, day, 0, 0, 0); // 8 AM Malaysia = midnight UTC
-    const endUTC = new Date(year, month, day, 12, 0, 0);   // 8 PM Malaysia = noon UTC
+    // 8 AM Malaysia = midnight UTC, 8 PM Malaysia = noon UTC
+    const startUTC = new Date(Date.UTC(year, month, day, 0, 0, 0)); // midnight UTC = 8 AM Malaysia
+    const endUTC = new Date(Date.UTC(year, month, day, 12, 0, 0));   // noon UTC = 8 PM Malaysia
     
     // Create new windows for all technicians
     const newWindows = technicians.map(tech => ({

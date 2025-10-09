@@ -110,15 +110,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const existing = await prisma.job.findUnique({ where: { id: Number(id) } });
     if (!existing) return NextResponse.json({ error: 'Job not found' }, { status: 404 });
 
-    // Convert Malaysia time to UTC before storing
-    const newStart = startTime ? (() => {
-      const malaysiaTime = new Date(startTime);
-      return new Date(malaysiaTime.getTime() - (8 * 60 * 60 * 1000)); // Convert to UTC
-    })() : existing.startTime;
-    const newEnd = endTime !== undefined ? (endTime ? (() => {
-      const malaysiaTime = new Date(endTime);
-      return new Date(malaysiaTime.getTime() - (8 * 60 * 60 * 1000)); // Convert to UTC
-    })() : null) : existing.endTime;
+    // datetime-local inputs are already in Malaysia time (UTC+8)
+    // No conversion needed - store as-is since we display as Malaysia time
+    const newStart = startTime ? new Date(startTime) : existing.startTime;
+    const newEnd = endTime !== undefined ? (endTime ? new Date(endTime) : null) : existing.endTime;
     const newTechId =
       technicianId !== undefined ? (technicianId ? Number(technicianId) : null) : existing.technicianId;
 
