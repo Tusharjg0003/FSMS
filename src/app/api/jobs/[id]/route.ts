@@ -49,6 +49,11 @@ import { authOptions } from "@/lib/auth";
 
 const prisma = new PrismaClient();
 
+function isOngoingStatus(status: string) {
+  const s = status.toLowerCase();
+  return s === 'pending' || s === 'in progress';
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -178,56 +183,73 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
 // delete job and all associated data
 export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  _req: Request,
+  { params }: { params: { id: string } }
 ) {
+  const jobId = Number(params.id);
+  if (Number.isNaN(jobId)) {
+    return NextResponse.json({ error: 'Invalid job id' }, { status: 400 });
+  }
+
   try {
-    const { id } = await params;
-    const session = await getServerSession(authOptions);
-    
-    // Only ADMIN can delete
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const result = await prisma.$transaction(async (tx) => {
+      // 1) Get job with technician
+      const job = await tx.job.findUnique({
+        where: { id: jobId },
+        select: { id: true, technicianId: true }
+      });
+      if (!job) {
+        return { ok: false, reason: 'Job not found' };
+      }
 
-    if (!id || isNaN(Number(id))) {
-      return NextResponse.json({ error: 'Invalid job ID' }, { status: 400 });
-    }
+      const techId = job.technicianId ?? null;
 
-    const jobId = Number(id);
+      // 2) Delete the job (hard-delete job record)
+      await tx.job.delete({ where: { id: jobId } });
 
-    // Check if job exists
-    const job = await prisma.job.findUnique({
-      where: { id: jobId },
+      // 3) If there is a technician, check ongoing jobs
+      if (techId) {
+        const now = new Date();
+
+        const ongoingCount = await tx.job.count({
+          where: {
+            technicianId: techId,
+            OR: [
+              { status: { in: ['pending', 'in progress'] } },
+              {
+                startTime: { gt: now },
+                status: { notIn: ['cancelled', 'completed'] }
+              }
+            ]
+          }
+        });
+
+        // 4) If no ongoing jobs remain, soft-delete the technician
+        if (ongoingCount === 0) {
+          await tx.user.update({
+            where: { id: techId },
+            data: {
+              isActive: false,
+              deletedAt: new Date()
+            }
+          });
+          return { ok: true, technicianSoftDeleted: true };
+        }
+      }
+
+      return { ok: true, technicianSoftDeleted: false };
     });
 
-    if (!job) {
-      return NextResponse.json({ error: 'Job not found' }, { status: 404 });
+    if (!result.ok) {
+      return NextResponse.json({ error: result.reason || 'Failed to delete' }, { status: 404 });
     }
 
-    // Delete everything in one transaction (cascade delete)
-    await prisma.$transaction([
-      // Delete reports
-      prisma.technicianReport.deleteMany({
-        where: { jobId },
-      }),
-      // Delete status history
-      prisma.jobStatusHistory.deleteMany({
-        where: { jobId },
-      }),
-      // Delete location history
-      prisma.locationHistory.deleteMany({
-        where: { jobId },
-      }),
-      // Finally delete the job
-      prisma.job.delete({
-        where: { id: jobId },
-      }),
-    ]);
-
-    return NextResponse.json({ message: 'Job deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting job:', error);
-    return NextResponse.json({ error: 'Failed to delete job' }, { status: 500 });
+    return NextResponse.json({
+      ok: true,
+      technicianSoftDeleted: result.technicianSoftDeleted
+    });
+  } catch (e) {
+    console.error('DELETE /api/jobs/[id] error', e);
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

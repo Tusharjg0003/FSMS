@@ -10,7 +10,6 @@ import { IconX, IconUser, IconMapPin, IconClock, IconClipboardList, IconEdit, Ic
 import { get } from 'http';
 
 interface Job {
-  needsReassignment: any;
   id: number;
   status: string;
   startTime: string;
@@ -436,13 +435,7 @@ const fetchTechnicians = async () => {
                                   >
                                     {job.status}
                                   </span>
-                                  {/* Red dot indicator for jobs needing reassignment */}
-                                  {job.needsReassignment && (
-                                    <span
-                                      className="ml-2 inline-block w-2 h-2 rounded-full bg-red-500"
-                                      title="Needs reassignment"
-                                    ></span>
-                                  )}
+
                                 
                                 </div>
                                 <div className="mt-1 flex items-center text-sm text-gray-500">

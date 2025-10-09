@@ -131,11 +131,8 @@ model Job {
   @@index([startTime])
   locationHistory LocationHistory[] // Add this relation
 
-    // New: reassignment flag when a technician is (soft) deleted while job not completed
-  needsReassignment Boolean  @default(false)
-  reassignmentNote  String?
   @@index([status])              // helpful for filters (e.g., ON_HOLD checks)
-  @@index([needsReassignment])   // helpful for UI "red dot" queries
+
 }
 
 
