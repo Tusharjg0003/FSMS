@@ -126,6 +126,18 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return NextResponse.json({ error: 'End time must be after start time' }, { status: 400 });
     }
 
+    // Get technician name if assigning to a new technician
+    let technicianName = existing.technicianName;
+    if (newTechId && newTechId !== existing.technicianId) {
+      const technician = await prisma.user.findUnique({
+        where: { id: newTechId },
+        select: { name: true }
+      });
+      technicianName = technician?.name || null;
+    } else if (newTechId === null) {
+      technicianName = null; // Clear technician name if unassigning
+    }
+
     if (newTechId) {
       //check if tech is available (on-job)
       
@@ -153,6 +165,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         startTime: newStart,
         endTime: newEnd,
         technicianId: newTechId,
+        technicianName: technicianName, // Store technician name for history preservation
         status: status ?? existing.status,
         location: location ?? existing.location,
       },

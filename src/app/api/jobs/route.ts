@@ -407,7 +407,20 @@ export async function POST(request: NextRequest) {
     if (autoAssign && finalJobLatitude != null && finalJobLongitude != null) {
       const selected = await autoAssignTechnician(job.id);
       if (selected) {
-        const updated = await prisma.job.update({ where: { id: job.id }, data: { technicianId: selected }, include: { jobType: true, technician: { select: { id: true, name: true, email: true } } } });
+        // Get technician name before updating
+        const technician = await prisma.user.findUnique({
+          where: { id: selected },
+          select: { name: true }
+        });
+        
+        const updated = await prisma.job.update({ 
+          where: { id: job.id }, 
+          data: { 
+            technicianId: selected,
+            technicianName: technician?.name // Store technician name for history preservation
+          }, 
+          include: { jobType: true, technician: { select: { id: true, name: true, email: true } } } 
+        });
         return NextResponse.json(updated, { status: 201 });
       } else {
         // Auto-assignment failed - return job with message to manually select technician

@@ -125,6 +125,7 @@ model Job {
   jobLongitude  Float?
   technicianId  Int?
   technician    User?   @relation("TechnicianJobs", fields: [technicianId], references: [id])
+  technicianName String? // Store technician name to preserve after user deletion
   reports       TechnicianReport[]
   statusHistory JobStatusHistory[]
   @@index([technicianId, startTime])

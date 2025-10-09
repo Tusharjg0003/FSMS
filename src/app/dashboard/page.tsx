@@ -117,7 +117,12 @@ export default function DashboardPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{job.location}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{job.startTime ? new Date(job.startTime).toLocaleString() : ''}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{job.endTime ? new Date(job.endTime).toLocaleString() : ''}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{job.technician?.name || '-'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {job.technician?.name || job.technicianName || '-'}
+                      {job.technicianName && !job.technician && (
+                        <span className="text-xs text-gray-500 ml-1">(deleted)</span>
+                      )}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <Link href={`/jobs/${job.id}`} className="text-blue-600 hover:text-blue-900">View</Link>
                     </td>

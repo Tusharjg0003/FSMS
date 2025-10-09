@@ -201,13 +201,16 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
         where: { userId: Number(id) }
       });
 
-      // Unassign completed jobs (set technicianId to null)
+      // For completed/cancelled jobs, preserve technician name and set technicianId to null
       await prisma.job.updateMany({
         where: { 
           technicianId: Number(id),
           status: { in: ['cancelled', 'completed'] }
         },
-        data: { technicianId: null }
+        data: { 
+          technicianId: null,
+          technicianName: user.name // Preserve technician name for history
+        }
       });
     }
 

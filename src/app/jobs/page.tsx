@@ -471,9 +471,12 @@ const fetchTechnicians = async () => {
                                     )}
                                   </div>
                                 )}
-                                {job.technician && (
+                                {(job.technician || job.technicianName) && (
                                   <div className="mt-1 text-sm text-gray-500">
-                                    Assigned to: {job.technician.name}
+                                    Assigned to: {job.technician?.name || job.technicianName}
+                                    {job.technicianName && !job.technician && (
+                                      <span className="text-xs text-gray-400 ml-1">(deleted)</span>
+                                    )}
                                   </div>
                                 )}
                               </div>
