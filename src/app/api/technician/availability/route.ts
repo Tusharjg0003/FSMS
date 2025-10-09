@@ -41,9 +41,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Check if technician has availability during the specified time
-    // An availability window covers the job time if:
-    // - window starts before or at job start time AND
-    // - window ends after or at job end time
+    // An availability window overlaps with the job time if:
+    // - window starts before job ends AND
+    // - window ends after job starts
     const jobStartTime = new Date(startTime);
     const jobEndTime = new Date(endTime);
     
@@ -76,11 +76,13 @@ export async function GET(request: NextRequest) {
 
     console.log(`User ${userIdNum} has ${totalWindows} availability windows`);
 
+    // Check for availability windows that overlap with the job time
+    // A window overlaps if: window.start < job.end AND window.end > job.start
     const availabilityWindows = await prisma.technicianAvailabilityWindow.findMany({
       where: {
         userId: userIdNum,
-        startUtc: { lte: jobStartTime }, // Window starts before or at job start
-        endUtc: { gte: jobEndTime }      // Window ends after or at job end
+        startUtc: { lt: jobEndTime },   // Window starts before job ends
+        endUtc: { gt: jobStartTime }    // Window ends after job starts
       }
     });
 

@@ -3,7 +3,16 @@ import { PrismaClient } from '@prisma/client';
 import { getServerSession } from 'next-auth';
 import { authOptions } from "@/lib/auth";
 
-const prisma = new PrismaClient();
+// Use singleton Prisma client to avoid connection issues
+declare global {
+  var prisma: PrismaClient | undefined;
+}
+
+const prisma = globalThis.prisma || new PrismaClient();
+
+if (process.env.NODE_ENV !== 'production') {
+  globalThis.prisma = prisma;
+}
 
 // Update technician's current location
 export async function POST(request: NextRequest) {
